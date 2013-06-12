@@ -7,6 +7,12 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+#ifdef MAIN
+  #define EXTERN 
+#else
+  #define EXTERN extern
+#endif
+
 #include <windows.h>
 
 /********************************************************************
@@ -14,31 +20,26 @@
 *
 */
 
-extern HWND hwnd;
+EXTERN HWND hwnd;
 
 LRESULT CALLBACK WndProc (HWND, UINT, WPARAM, LPARAM);
 
-static int _redraw;
-static int _close;
-static int _Field[6][7] = {{0,0,0,0,0,0,0}, // _Field[y][x]
-                           {0,0,0,0,0,0,0},
-                           {0,0,0,0,0,0,0},
-                           {0,0,0,0,0,0,0},
-                           {0,0,0,0,0,0,0},
-                           {0,0,1,2,0,0,0},
-                          };
-static int _CurrentPlayer;  // 1, 2
-static int _RoundCount;     // <= 42;
+EXTERN int _redraw;
+EXTERN int _close;
+EXTERN int _Started;
+EXTERN int _Field[6][7];
+EXTERN int _CurrentPlayer;  // 1, 2
+EXTERN int _RoundCount;     // <= 42;
 
 typedef struct {
     int width;
     int height;
 } BOARD_SIZE;
 
-static int _TileSize;
-static BOARD_SIZE _Board;
+EXTERN int _TileSize;
+EXTERN BOARD_SIZE _Board;
 
-static BOARD_SIZE _Window;
+EXTERN BOARD_SIZE _Window;
 
 #define FIELD_X         6
 #define FIELD_Y         7

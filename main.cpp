@@ -4,14 +4,13 @@
 * Purpose: 
 *
 */
+
+#define MAIN
+
 #include "MAIN.h"
 
 #include <windowsx.h>
 #include <process.h>
-
-HWND hwnd;
-
-
 
 VOID ThreadGUI(PVOID pvoid) {
   do {
@@ -30,7 +29,11 @@ void Start() {
 LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
 
   switch (message) {
+    
   case WM_LBUTTONDOWN:
+    if (_Started == 0) {
+      return 0;
+    }
     switch (GetField(GET_X_LPARAM(lParam))) {
     case 0:
       SwitchPlayer();
@@ -45,14 +48,18 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
       break;
     }
     return 0;
+    
   case WM_PAINT:
     _redraw = 1;
     return 0;
   case WM_SIZE:
-    CalculateField();
+    RECT rect;
+    //SetWindowSize();
+    GetClientRect (hwnd, &rect);
+    //SetWindowPos(hwnd, NULL, rect.left, rect.top, rect.left+_Board.width, rect.top+_Board.height, 0);
     return TRUE;
   case WM_SIZING:
-    SetWindowSize();
+    //SetWindowSize();
     return TRUE;
 
   case WM_DESTROY:
@@ -81,7 +88,14 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine
 
   RegisterClass (&wndclass);
 
-
+  _Window.width = 800;
+  _Window.height = 700;
+  _Board.width = 700;
+  _Board.height = 600;
+  _TileSize = 94;
+  _CurrentPlayer = 1;
+  _RoundCount = 0;
+  _Started = 1;
 
   hwnd = CreateWindow (
     szAppName,                          // Name der Fensterklasse
@@ -89,8 +103,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine
     WS_OVERLAPPEDWINDOW,                // Fensterstil
     CW_USEDEFAULT,                      // X-Position des Fensters
     CW_USEDEFAULT,                      // Y-Position des Fensters
-    CW_USEDEFAULT,                      // Fensterbreite
-    CW_USEDEFAULT,                      // Fensterhoehe
+    _Window.width,                      // Fensterbreite
+    _Window.height,                     // Fensterhoehe
     NULL,                               // Uebergeordnetes Fenster
     NULL,                               // Menue
     hInstance,                          // Programm-ID
@@ -101,8 +115,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine
   UpdateWindow (hwnd);
   
   _beginthread(ThreadGUI,0,NULL);
-  SetWindowSize();
-  CalculateField();
+  //SetWindowSize();
+  //CalculateField();
   Start();
 
   while (GetMessage (&msg, NULL, 0, 0)) {

@@ -19,7 +19,7 @@ extern HWND hwnd;
 //     1 win
 //     2 end
 */
-int _GetField(int PosX) {
+int GetField(int PosX) {
   int ColumWidth;
   int FieldX;
   int FieldY;
@@ -32,16 +32,18 @@ int _GetField(int PosX) {
     FieldX = 0;
   } else  if (PosX <= ColumWidth * 2) {
     FieldX = 1;
-  } else  if (PosX <= ColumWidth * 2) {
+  } else  if (PosX <= ColumWidth * 3) {
     FieldX = 2;
-  } else  if (PosX <= ColumWidth * 2) {
+  } else  if (PosX <= ColumWidth * 4) {
     FieldX = 3;
-  } else  if (PosX <= ColumWidth * 2) {
+  } else  if (PosX <= ColumWidth * 5) {
     FieldX = 4;
-  } else  if (PosX <= ColumWidth * 2) {
+  } else  if (PosX <= ColumWidth * 6) {
     FieldX = 5;
-  } else  if (PosX <= ColumWidth * 2) {
+  } else  if (PosX <= ColumWidth * 7) {
     FieldX = 6;
+  } else {
+    return -1;
   }
   //
   // Call animation function which returns Y field number
@@ -56,7 +58,7 @@ int _GetField(int PosX) {
   _RoundCount++;
   if (CheckWin(FieldX, FieldY)) {  // Do we have a winner?
     return 1;  
-  };
+  }
   if (CheckEnd()) {                // No free coin field remaining?
     return 2;
   }
@@ -68,62 +70,50 @@ int SetTile(int FieldX) {
   int FieldY;
   int left;
   int top;
-  HDC         hdc;
-  HBRUSH hEmptyField;
-  HBRUSH hPlayerField;
-  PAINTSTRUCT ps;
 
-  hdc = BeginPaint(hwnd, &ps);
-
-  hEmptyField = (HBRUSH) CreateSolidBrush (RGB(0xFF, 0xFF, 0xFF));
-  switch(_CurrentPlayer) {
+  HDC     hdc;
+  HBRUSH  hEmptyTile;
+  HBRUSH  hPlayer;
+  
+  hEmptyTile = (HBRUSH) CreateSolidBrush (RGB(0xFF, 0xFF, 0xFF));
+  switch (_CurrentPlayer) {
   case 1:
-    hPlayerField = (HBRUSH) CreateSolidBrush (RGB(0xFF, 0, 0));
+    hPlayer = (HBRUSH) CreateSolidBrush (RGB(0xFF, 0, 0));
     break;
   case 2:
-    hPlayerField = (HBRUSH) CreateSolidBrush (RGB(0, 0xFF, 0));
+    hPlayer = (HBRUSH) CreateSolidBrush (RGB(0, 0xFF, 0));
     break;
   }
-  
-  left = BORDER_BOARD + ((_TileSize + BORDER_TILE*2) * FieldX);
-  top =  BORDER_BOARD;
+  hdc = GetDC(hwnd);
+  left = BORDER_BOARD + BORDER_TILE + ((_TileSize + BORDER_TILE*2) * FieldX);
+  top =  BORDER_BOARD + BORDER_TILE;
   FieldY = 0;
-  do {
-    SelectObject (hdc, hPlayerField);
+  while (_Field[FieldY][FieldX] == 0 && FieldY < 6) {
+    SelectObject (hdc, hPlayer);
     Ellipse(hdc, left, top, left+_TileSize, top+_TileSize);
-
-    Sleep(300);
-
-    SelectObject(hdc, hEmptyField);
+    Sleep(50);
+    SelectObject (hdc, hEmptyTile);
     Ellipse(hdc, left, top, left+_TileSize, top+_TileSize);
-
     top += _TileSize + BORDER_TILE*2;
     FieldY++;
-  } while (_Field[FieldY][FieldX] == 0);
-
-  SelectObject (hdc, hPlayerField);
-  Ellipse(hdc, left, top, left+_TileSize, top+_TileSize);
-
+  }
   FieldY--;
+  _Field[FieldY][FieldX] = _CurrentPlayer;
+  top -= _TileSize + BORDER_TILE*2;
+  SelectObject (hdc, hPlayer);
+  Ellipse(hdc, left, top, left+_TileSize, top+_TileSize);
+  ReleaseDC(hwnd, hdc);
 
-
-  EndPaint(hwnd, &ps);
   return FieldY;
 }
 
 void DisplayWin(void) {
   HDC         hdc;
-  PAINTSTRUCT ps;
 
-  hdc = BeginPaint (hwnd, &ps);
-
-  //
-  // Display a win message
-  //
-
-
-
-  EndPaint(hwnd, &ps);
+  _Started = 0;
+  hdc = GetDC(hwnd);
+  TextOut(hdc, _Window.width/3, _Window.height/3, L"Ein Sieg! Ein Sieg! Ein Sieg!", 29);
+  ReleaseDC(hwnd, hdc);
 }
 
 void DrawBoard(void) {
@@ -133,11 +123,14 @@ void DrawBoard(void) {
   HBRUSH    hPlayerTwo;
   HDC         hdc;
   PAINTSTRUCT ps;
-
   int left;
   int top;
   int x;
   int y;
+
+  RECT rect;
+
+  GetClientRect(hwnd, &rect);
 
   hdc = BeginPaint (hwnd, &ps);
 
@@ -153,7 +146,7 @@ void DrawBoard(void) {
   // Draw the field background
   //
   SelectObject (hdc, hField);
-  Rectangle(hdc, BORDER_BOARD, BORDER_BOARD, _Board.width, _Board.height);
+  Rectangle(hdc, rect.left + BORDER_BOARD, rect.top + BORDER_BOARD, rect.left + _Board.width + BORDER_BOARD, rect.top + _Board.height + BORDER_BOARD);
 
   left = BORDER_BOARD + BORDER_TILE;
   top =  BORDER_BOARD + BORDER_TILE;
@@ -173,13 +166,41 @@ void DrawBoard(void) {
       Ellipse(hdc, left, top, left+_TileSize, top+_TileSize);
       top += _TileSize + BORDER_TILE*2;
     }
-    top = BORDER_BOARD;
+    top = BORDER_BOARD + BORDER_TILE;
     left += _TileSize + BORDER_TILE*2;
   }
   EndPaint(hwnd, &ps);
 }
 
 
+static int _ChangeSize;
 
+void SetWindowSize(void) {
+  RECT rect;
+  int width;
+  int height;
+
+  GetClientRect (hwnd, &rect);
+  width  = rect.right  - rect.left;
+  height = rect.bottom - rect.top;
+  //
+  // Does the width of the windows has been changed?
+  //
+  if (_Board.width != width) {
+    _Board.width  = width;
+    _Board.height = ((width) / 7 ) * 6;
+    _TileSize = ((width - BORDER_BOARD*2) / 7) - 6;
+  } else if (_Board.height != height) {
+    _Board.height = height;
+    _Board.width  = ((height) / 6) * 7;
+    _TileSize = ((height - BORDER_BOARD*2) / 6) - 6;
+  }
+
+}
+
+void CalculateField(void) {}
+void DisplayEnd(void) {
+  _Started = 0;
+}
 
 /******* EOF *******************************************************/

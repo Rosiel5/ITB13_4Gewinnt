@@ -7,38 +7,13 @@
 
 #include "MAIN.h"
 
-// returns colum field (0-6)
-int GetField(int PosX) {
-  int ColumWidth;
-  int r;
-  ColumWidth = _TileSize + BORDER_TILE*2;
-  if (PosX <= ColumWidth * 1) {
-    r = 0;
-  } else  if (PosX <= ColumWidth * 2) {
-    r = 1;
-  } else  if (PosX <= ColumWidth * 2) {
-    r = 2;
-  } else  if (PosX <= ColumWidth * 2) {
-    r = 3;
-  } else  if (PosX <= ColumWidth * 2) {
-    r = 4;
-  } else  if (PosX <= ColumWidth * 2) {
-    r = 5;
-  } else  if (PosX <= ColumWidth * 2) {
-    r = 6;
-  } else { 
-    r = -1;
-  }
-  return r;
-}
-
 
 //
 // Process the static field array and check if there
 // is space left to place tiles.
 //
 bool CheckEnd(void) {
-  if ((FIELD_X * FIELD_Y) < _RoundCount) {
+  if ((FIELD_X * FIELD_Y) > _RoundCount) {
     return false;
   } else {
     return true;
