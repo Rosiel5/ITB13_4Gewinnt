@@ -27,6 +27,8 @@ void Start() {
 }
 
 LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
+  int r;
+  int RandomFieldX;
 
   switch (message) {
   case WM_RBUTTONDOWN:
@@ -42,6 +44,43 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     if (_Started == 0) {
       return 0;
     }
+#if AI
+    //
+    //
+    //
+    r = GetField(GET_X_LPARAM(lParam));
+    switch (r) {
+    case 0:
+      SwitchPlayer();
+      //
+      // We have switched to the AI,
+      // the AI will attempt to perform a valid move.
+      //
+      do {
+        RandomFieldX = rand() % FIELD_X;
+        r = SetTile(RandomFieldX);
+      } while (r == -1);
+      switch (IncreaseRoundCntCheckEnd(RandomFieldX, r)) {
+      case 1:
+        DisplayWin();
+        break;
+      case 2:
+        DisplayEnd();
+        break;
+      }
+      SwitchPlayer();
+      break;
+    case 1:
+      DisplayWin();
+      break;
+    case 2:
+      DisplayEnd();
+      break;
+    default:
+      break;
+    }
+
+#else
     switch (GetField(GET_X_LPARAM(lParam))) {
     case 0:
       SwitchPlayer();
@@ -55,13 +94,14 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     default:
       break;
     }
+#endif
     return 0;
     
   case WM_PAINT:
     _redraw = 1;
     return 0;
   case WM_SIZE:
-    RECT rect;
+//    RECT rect;
     //SetWindowSize();
   //  GetClientRect (hwnd, &rect);
     //SetWindowPos(hwnd, NULL, rect.left, rect.top, rect.left+_Board.width, rect.top+_Board.height, 0);
@@ -133,3 +173,4 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine
   }
   return msg.wParam ;
 }
+/*************************** End of file ****************************/

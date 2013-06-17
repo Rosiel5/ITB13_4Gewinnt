@@ -9,15 +9,54 @@
 
 extern HWND hwnd;
 
-/********************************************
-//
-//  _GetField()
-//
-//  return values:
-//     0 succes (stone is set)
-//    -1 selectet row is full
-//     1 win
-//     2 end
+
+/*********************************************************************
+*
+*       IncreaseRoundCntCheckEnd
+*
+*  Function description:
+*    Increases the static round count and checks if the game is 
+*    finished or if there is a winner.
+*
+*  Parameters:
+*    FieldX - Command that shall be executed.
+*    FieldY - Pointer to command specific pData.
+*
+*  Return value:
+*    0 - Neither condition has occured.
+*    1 - Win
+*    2 - End
+*
+*  Note:
+*  This function is global because it is also called from 
+*  the WndProc callback when AI is used.
+*/
+int IncreaseRoundCntCheckEnd(int FieldX, int FieldY) {
+  //
+  // When the stone is set we have to check for win, end and increment the round count.
+  //
+  _RoundCount++;
+  if (CheckWin(FieldX, FieldY)) {  // Do we have a winner?
+    return 1;  
+  }
+  if (CheckEnd()) {                // No free coin field remaining?
+    return 2;
+  }
+  return 0;  
+}
+
+/*********************************************************************
+*
+*       _GetField()
+*
+*  Function description
+*
+*
+*  Return values
+*     0 succes (stone is set)
+*    -1 selectet row is full
+*     1 win
+*     2 end
 */
 int GetField(int PosX) {
   int ColumWidth;
@@ -52,20 +91,20 @@ int GetField(int PosX) {
   if (FieldY < 0) {                // Column full?
     return -1;
   }
-  //
-  // When the stone is set we have to check for win, end and increment the round count.
-  //
-  _RoundCount++;
-  if (CheckWin(FieldX, FieldY)) {  // Do we have a winner?
-    return 1;  
-  }
-  if (CheckEnd()) {                // No free coin field remaining?
-    return 2;
-  }
-  return 0;  
+  return IncreaseRoundCntCheckEnd(FieldX, FieldY);
 }
 
 
+/*********************************************************************
+*
+*       SetTile
+*
+*  Function description
+*
+*
+*  Return values
+*    0:   
+*/
 int SetTile(int FieldX) {
   int FieldY;
   int left;
@@ -75,6 +114,18 @@ int SetTile(int FieldX) {
   HBRUSH  hEmptyTile;
   HBRUSH  hPlayer;
   
+  //
+  // Check whether the column is full.
+  //
+  for (FieldY = 0; FieldY < FIELD_Y; FieldY++) {
+    if (_Field[FieldY][FieldX] == 0) {
+      break;
+    }
+  }
+  if (FieldY == FIELD_Y && _Field[FieldY-1][FieldX] != 0) {
+    return -1;
+  }
+
   hEmptyTile = (HBRUSH) CreateSolidBrush (RGB(0xFF, 0xFF, 0xFF));
   switch (_CurrentPlayer) {
   case 1:
@@ -88,7 +139,7 @@ int SetTile(int FieldX) {
   left = BORDER_BOARD + BORDER_TILE + ((_TileSize + BORDER_TILE*2) * FieldX);
   top =  BORDER_BOARD + BORDER_TILE;
   FieldY = 0;
-  while (_Field[FieldY][FieldX] == 0 && FieldY < 6) {
+  while (_Field[FieldY][FieldX] == 0 && FieldY < FIELD_Y) {
     SelectObject (hdc, hPlayer);
     Ellipse(hdc, left, top, left+_TileSize, top+_TileSize);
     Sleep(50);
@@ -109,13 +160,23 @@ int SetTile(int FieldX) {
 
 void DisplayWin(void) {
   HDC         hdc;
+  char        ac[100];
 
+  sprintf(ac, "Player: %d; Ein Sieg! Ein Sieg! Ein Sieg!", _CurrentPlayer);
   _Started = 0;
   hdc = GetDC(hwnd);
-  TextOut(hdc, _Window.width/3, _Window.height/3, L"Ein Sieg! Ein Sieg! Ein Sieg!", 29);
+  TextOut(hdc, _Window.width/3, _Window.height/3, (LPCWSTR)&ac, 29);
   ReleaseDC(hwnd, hdc);
 }
 
+/*********************************************************************
+*
+*       DrawBoard
+*
+*  Function description
+*    
+*
+*/
 void DrawBoard(void) {
   HBRUSH    hField;
   HBRUSH    hEmptyTile;
@@ -171,6 +232,14 @@ void DrawBoard(void) {
 
 static int _ChangeSize;
 
+/*********************************************************************
+*
+*       SetWindowSize
+*
+*  Function description
+*
+*
+*/
 void SetWindowSize(void) {
   RECT rect;
   int width;
@@ -199,4 +268,4 @@ void DisplayEnd(void) {
   _Started = 0;
 }
 
-/******* EOF *******************************************************/
+/*************************** End of file ****************************/

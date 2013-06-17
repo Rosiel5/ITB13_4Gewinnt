@@ -91,6 +91,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AI.cpp" />
     <ClCompile Include="DUMMY.cpp" />
     <ClCompile Include="GAME.cpp" />
     <ClCompile Include="GUI.cpp" />
@@ -98,6 +99,7 @@
     <ClCompile Include="PLAYER.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AI.h" />
     <ClInclude Include="MAIN.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
