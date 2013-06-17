@@ -131,9 +131,7 @@ void DrawBoard(void) {
   RECT rect;
 
   GetClientRect(hwnd, &rect);
-
   hdc = BeginPaint (hwnd, &ps);
-
   //
   // Set brush colors
   //
@@ -141,13 +139,11 @@ void DrawBoard(void) {
   hEmptyTile = (HBRUSH) CreateSolidBrush (RGB(0xFF, 0xFF, 0xFF));
   hPlayerOne = (HBRUSH) CreateSolidBrush (RGB(0xFF, 0, 0));
   hPlayerTwo = (HBRUSH) CreateSolidBrush (RGB(0, 0xFF, 0));
-
   //
   // Draw the field background
   //
   SelectObject (hdc, hField);
   Rectangle(hdc, rect.left + BORDER_BOARD, rect.top + BORDER_BOARD, rect.left + _Board.width + BORDER_BOARD, rect.top + _Board.height + BORDER_BOARD);
-
   left = BORDER_BOARD + BORDER_TILE;
   top =  BORDER_BOARD + BORDER_TILE;
   for(x = 0; x < 7; x++) {      // Draw the row

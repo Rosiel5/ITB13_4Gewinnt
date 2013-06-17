@@ -29,7 +29,15 @@ void Start() {
 LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
 
   switch (message) {
-    
+  case WM_RBUTTONDOWN:
+    memset(_Field, 0,sizeof(_Field));
+    _Started = 1;
+    _redraw = 1;
+	DrawBoard();
+    _close = 0;
+    _CurrentPlayer = 1;  // 1, 2
+    _RoundCount = 0;     // <= 42;
+  return 0;    
   case WM_LBUTTONDOWN:
     if (_Started == 0) {
       return 0;
@@ -55,7 +63,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
   case WM_SIZE:
     RECT rect;
     //SetWindowSize();
-    GetClientRect (hwnd, &rect);
+  //  GetClientRect (hwnd, &rect);
     //SetWindowPos(hwnd, NULL, rect.left, rect.top, rect.left+_Board.width, rect.top+_Board.height, 0);
     return TRUE;
   case WM_SIZING:
