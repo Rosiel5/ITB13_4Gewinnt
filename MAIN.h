@@ -42,13 +42,14 @@ EXTERN HWND hwnd;
 
 LRESULT CALLBACK WndProc (HWND, UINT, WPARAM, LPARAM);
 
-EXTERN int _redraw;
-EXTERN int _close;
-EXTERN int _Started;
-EXTERN int _Field[6][7];    // [y][x]
-EXTERN int _CurrentPlayer;  // 1, 2
-EXTERN int _RoundCount;     // <= 42;
-
+EXTERN int _redraw;         // 0: Nothing have to be done, 1: We have to repaint the window
+EXTERN int _close;          // 
+EXTERN int _Started;        // Game has allready started? 1: Yes, 0: No
+EXTERN int _Field[6][7];    // [y][x] coordinate of the field
+EXTERN int _CurrentPlayer;  // 1: Player 1; 2: Player 2; This option is undependet form _GameModus (Player 2 can be a human or AI)
+EXTERN int _RoundCount;     // Number of rounds we have played. Max value of round is 42 since we have 7x7 fields.
+EXTERN int _GameModus;      // Specify wheater we play vs a computer or a player. 1: Player vs Player; 2: Player vs AI
+EXTERN int _GUIStarted;  
 typedef struct {
     int width;
     int height;
