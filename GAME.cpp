@@ -44,7 +44,7 @@ bool CheckWin(int NewTileX, int NewTileY) {
   //
   // Check horizontal.
   //
-  for (x = 0; x < FIELD_X-2; x++) {
+  for (x = 0; x < FIELD_X-3; x++) {
     if ((_Field[NewTileY][x    ] == _CurrentPlayer) &&
         (_Field[NewTileY][x + 1] == _CurrentPlayer) &&
         (_Field[NewTileY][x + 2] == _CurrentPlayer) &&
