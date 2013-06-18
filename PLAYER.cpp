@@ -19,5 +19,5 @@ void SwitchPlayer(void) {
 // returns player 1 or 2
 int GetPlayer(void) {
   return _CurrentPlayer;
-}; 
+}
 /*************************** End of file ****************************/

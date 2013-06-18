@@ -9,9 +9,6 @@
 
 #include "MAIN.h"
 
-#include <windowsx.h>
-#include <process.h>
-
 VOID ThreadGUI(PVOID pvoid) {
   do {
     if(_redraw == 1) {
@@ -31,7 +28,7 @@ void Start() {
     // Start GUI Thread
     //
     _beginthread(ThreadGUI,0,NULL);	
-	_GUIStarted = 1;
+	  _GUIStarted = 1;
   }
   memset(_Field, 0,sizeof(_Field));
   _close         = 0;
@@ -44,91 +41,117 @@ void Start() {
   InvalidateRect(hwnd, NULL,NULL);
   UpdateWindow(hwnd);
 }
-#define ID_NEWGAME_PvsP  9001
-#define ID_NEWGAME_PvsAI 9002
+
 
 LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
   int r;
   int RandomFieldX;
 
   switch (message) {
-  case WM_RBUTTONDOWN:
-    Start();
-  return 0;    
-  case WM_CREATE:
-    HMENU hMenu, hSubMenu;
-    HICON hIcon, hIconSm;
-	//
-	// Create handles
-	//
-    hMenu = CreateMenu();
-    hSubMenu = CreatePopupMenu();
-	//
-	// Configure menu entries
-	//
-    AppendMenu(hSubMenu, MF_STRING, ID_NEWGAME_PvsP, L"Player vs. Player");
-    AppendMenu(hSubMenu, MF_STRING, ID_NEWGAME_PvsAI, L"Player vs. AI");
-    AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT)hSubMenu, L"N&ew Game");
-	//
-	// Create menu
-	//
-    SetMenu(hwnd, hMenu);
-  break;
-  //
-  // WM_COMMAND handles the main menu
-  // Here we initialize a new game
-  //
-  case WM_COMMAND:
-    switch(LOWORD(wParam)) {
-      case ID_NEWGAME_PvsP:
-        _GameModus = 1;
-       break;
-       case ID_NEWGAME_PvsAI:
-        _GameModus = 2;
-		break;
-	}
-    Start();
-	return 0;
-  //
-  // When we get a WM_LBUTTONDOWN, we have to perform gaming action like
-  // Set a tie, calculate winner etc...
-  //
-  case WM_LBUTTONDOWN:
-	//
-	// Check if a game is started
-	//
-    if (_Started == 0) {
-      return 0;
-    }
-	//
-	// Check if we play vs a AI
-	//
-	if (_GameModus == 2) {
-      //
-      //
-      //
-      r = GetField(GET_X_LPARAM(lParam));
-      switch (r) {
-      case 0:
-        SwitchPlayer();
-        //
-        // We have switched to the AI,
-        // the AI will attempt to perform a valid move.
-        //
-        do {
-          RandomFieldX = rand() % FIELD_X;
-          r = SetTile(RandomFieldX);
-        } while (r == -1);
-        switch (IncreaseRoundCntCheckEnd(RandomFieldX, r)) {
+    case WM_RBUTTONDOWN:
+      Start();
+    return 0;    
+    case WM_CREATE:
+      HMENU hMenu, hSubMenu, hSubMenuNET;
+      HICON hIcon, hIconSm;
+	    //
+	    // Create handles
+	    //
+      hMenu       = CreateMenu();
+      hSubMenu    = CreatePopupMenu();
+      hSubMenuNET = CreatePopupMenu();
+	    //
+	    // Configure menu entries
+	    //
+      AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT)hSubMenu,       L"N&ew Game");
+      AppendMenu(hSubMenu, MF_STRING, ID_NEWGAME_PvsP,              L"Player vs. Player");
+      AppendMenu(hSubMenu, MF_STRING, ID_NEWGAME_PvsAI,             L"Player vs. AI");
+      AppendMenu(hSubMenu, MF_STRING | MF_POPUP, (UINT)hSubMenuNET, L"Player vs. Player [Network]");
+      AppendMenu(hSubMenuNET, MF_STRING, ID_NEWGAME_PvP_NET_Server, L"Start Server");
+      AppendMenu(hSubMenuNET, MF_STRING, ID_NEWGAME_PvP_NET_Client, L"Connect to Server");
+	    //
+	    // Create menu
+	    //
+      SetMenu(hwnd, hMenu);
+    break;
+    //
+    // WM_COMMAND handles the main menu
+    // Here we initialize a new game
+    //
+    case WM_COMMAND:
+      switch(LOWORD(wParam)) {
+        case ID_NEWGAME_PvsP:
+          _GameModus = 1;
+          break;
+        case ID_NEWGAME_PvsAI:
+          _GameModus = 2;
+		      break;
+        case ID_NEWGAME_PvP_NET_Server:
+          //_beginthread(ThreadGUI,0,(void *) 1);	
+          break;
+        case ID_NEWGAME_PvP_NET_Client:
+          //_beginthread(ThreadGUI,0,(void *) 2);	
+          break;
+	  }
+      Start();
+	  return 0;
+    //
+    // When we get a WM_LBUTTONDOWN, we have to perform gaming action like
+    // Set a tile, calculate winner etc...
+    //
+    case WM_LBUTTONDOWN:
+	  //
+	  // Check if a game is started
+	  //
+      if (_Started == 0) {
+        return 0;
+      }
+	  //
+	  // Check if we play "hot seat" (two players, one computer)
+	  //
+	  if (_GameModus == 1) {
+      switch (GetField(GET_X_LPARAM(lParam))) {
+        case 0:
+          SwitchPlayer();
+          break;
         case 1:
           DisplayWin();
           break;
         case 2:
           DisplayEnd();
           break;
-        }
-        SwitchPlayer();
-        break;
+        default:
+          break;
+      }
+	  //
+	  // Check if we play vs a AI
+	  //
+	  } else if (_GameModus == 2) {  
+      //
+      //
+      //
+      r = GetField(GET_X_LPARAM(lParam));
+      switch (r) {
+        case 0:
+          SwitchPlayer();
+          //
+          // We have switched to the AI,
+          // the AI will attempt to perform a valid move.
+          //
+          do {
+            RandomFieldX = rand() % FIELD_X;
+            r = SetTile(RandomFieldX);
+          } while (r == -1);
+          switch (IncreaseRoundCntCheckEnd(RandomFieldX, r)) {
+            case 1:
+              DisplayWin();
+              break;
+            case 2:
+              DisplayEnd();
+              break;
+          }
+          SwitchPlayer();
+          break;
         case 1:
           DisplayWin();
           break;
@@ -138,32 +161,20 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         default:
         break;
       }
-	//
-	// Check if we play "hot seat" (two players, one computer)
-	//
-	} else if (_GameModus == 1) {  
-    switch (GetField(GET_X_LPARAM(lParam))) {
-      case 0:
-        SwitchPlayer();
-        break;
-      case 1:
-        DisplayWin();
-        break;
-      case 2:
-        DisplayEnd();
-        break;
-      default:
-        break;
-      }
-	}
-    return 0;
-  case WM_PAINT:
-    _redraw = 1;
-    return 0;
-  case WM_DESTROY:
-    _close = 1;
-    PostQuitMessage (0);
-    return 0;
+    //
+	  // Check if we play via TCP/IP
+	  //
+	  } else if (_GameModus == 3) {
+
+    }
+      return 0;
+    case WM_PAINT:
+      _redraw = 1;
+      return 0;
+    case WM_DESTROY:
+      _close = 1;
+      PostQuitMessage (0);
+      return 0;
   }
   return DefWindowProc (hwnd, message, wParam, lParam);
 }

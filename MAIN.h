@@ -14,6 +14,8 @@
 #endif
 
 #include <windows.h>
+#include <windowsx.h>
+#include <process.h>
 #include <stdio.h>
 
 /*********************************************************************
@@ -29,7 +31,11 @@
 #define BORDER_BOARD    10  //Size of border to window frame
 #define BORDER_TILE     3   //Border around the tiles
 
-#define AI 1
+#define ID_NEWGAME_PvsP           9001
+#define ID_NEWGAME_PvsAI          9002
+#define ID_NEWGAME_PvP_NET        9003
+#define ID_NEWGAME_PvP_NET_Server 9004
+#define ID_NEWGAME_PvP_NET_Client 9005
 
 /*********************************************************************
 *

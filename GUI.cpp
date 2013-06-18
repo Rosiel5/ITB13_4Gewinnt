@@ -128,12 +128,12 @@ int SetTile(int FieldX) {
 
   hEmptyTile = (HBRUSH) CreateSolidBrush (RGB(0xFF, 0xFF, 0xFF));
   switch (_CurrentPlayer) {
-  case 1:
-    hPlayer = (HBRUSH) CreateSolidBrush (RGB(0xFF, 0, 0));
-    break;
-  case 2:
-    hPlayer = (HBRUSH) CreateSolidBrush (RGB(0, 0xFF, 0));
-    break;
+    case 1:
+      hPlayer = (HBRUSH) CreateSolidBrush (RGB(0xFF, 0, 0));
+      break;
+    case 2:
+      hPlayer = (HBRUSH) CreateSolidBrush (RGB(0, 0xFF, 0));
+      break;
   }
   hdc = GetDC(hwnd);
   left = BORDER_BOARD + BORDER_TILE + ((_TileSize + BORDER_TILE*2) * FieldX);
@@ -210,15 +210,15 @@ void DrawBoard(void) {
   for(x = 0; x < 7; x++) {      // Draw the row
 	  for(y = 0; y < 6; y++) {    // Draw the column
       switch (_Field[y][x]) {
-      case 0:
-        SelectObject (hdc, hEmptyTile);
-        break;
-      case 1:
-        SelectObject (hdc, hPlayerOne);
-        break;
-      case 2:
-        SelectObject (hdc, hPlayerTwo);
-        break;
+        case 0:
+          SelectObject (hdc, hEmptyTile);
+          break;
+        case 1:
+          SelectObject (hdc, hPlayerOne);
+          break;
+        case 2:
+          SelectObject (hdc, hPlayerTwo);
+          break;
       }
       Ellipse(hdc, left, top, left+_TileSize, top+_TileSize);
       top += _TileSize + BORDER_TILE*2;
