@@ -31,11 +31,20 @@
 #define BORDER_BOARD    10  //Size of border to window frame
 #define BORDER_TILE     3   //Border around the tiles
 
+/*********************************************************************
+*
+*       Defines, fix
+*
+**********************************************************************
+*/
 #define ID_NEWGAME_PvsP           9001
 #define ID_NEWGAME_PvsAI          9002
 #define ID_NEWGAME_PvP_NET        9003
 #define ID_NEWGAME_PvP_NET_Server 9004
 #define ID_NEWGAME_PvP_NET_Client 9005
+
+#define NET_MODE_SERVER           1
+#define NET_MODE_CLIENT           2
 
 /*********************************************************************
 *
@@ -65,6 +74,7 @@ EXTERN int _TileSize;
 EXTERN BOARD_SIZE _Board;
 
 EXTERN BOARD_SIZE _Window;
+EXTERN char NET_ServerWaiting;
 
 /*********************************************************************
 *
@@ -108,6 +118,20 @@ int  IncreaseRoundCntCheckEnd(int FieldX, int FieldY);
 */
 void CalculateNextMove(unsigned int );   // Calculates the next move
 
+/*********************************************************************
+*
+*       NET
+*
+**********************************************************************
+*/
+VOID ThreadNET(PVOID pvoid);
 
+/*********************************************************************
+*
+*       Common
+*
+**********************************************************************
+*/
+int DisplayErrorMessageBox(char Type, TCHAR * acStr);
 #endif
 /*************************** End of file ****************************/

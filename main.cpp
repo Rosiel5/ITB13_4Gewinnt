@@ -87,10 +87,10 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
           _GameModus = 2;
 		      break;
         case ID_NEWGAME_PvP_NET_Server:
-          //_beginthread(ThreadGUI,0,(void *) 1);	
+          _beginthread(ThreadNET,0,(void *) NET_MODE_SERVER);	
           break;
         case ID_NEWGAME_PvP_NET_Client:
-          //_beginthread(ThreadGUI,0,(void *) 2);	
+          _beginthread(ThreadNET,0,(void *) NET_MODE_CLIENT);	
           break;
 	  }
       Start();
