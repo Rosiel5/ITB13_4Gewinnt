@@ -75,6 +75,7 @@ EXTERN BOARD_SIZE _Board;
 
 EXTERN BOARD_SIZE _Window;
 EXTERN char NET_ServerWaiting;
+EXTERN char NET_TurnComplete;
 
 /*********************************************************************
 *

@@ -34,7 +34,6 @@ void Start() {
   _close         = 0;
   _Started       = 1;
   _RoundCount    = 0;
-  _CurrentPlayer = 1;
   //
   // Force the window to send an WM_PAINT message immediately
   //
@@ -79,6 +78,10 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     // Here we initialize a new game
     //
     case WM_COMMAND:
+      //
+      // Set Current Player to the default value of 1, as doing it in Start() would overwrite the setting in NET.
+      //
+      _CurrentPlayer = 1;
       switch(LOWORD(wParam)) {
         case ID_NEWGAME_PvsP:
           _GameModus = 1;
@@ -87,12 +90,22 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
           _GameModus = 2;
 		      break;
         case ID_NEWGAME_PvP_NET_Server:
+          //
+          // Player 1 is always the server.
+          //
+          _GameModus = 3;
+          _CurrentPlayer = 1;
           _beginthread(ThreadNET,0,(void *) NET_MODE_SERVER);	
           break;
         case ID_NEWGAME_PvP_NET_Client:
+          //
+          // Player 2 is always the client.
+          //
+          _GameModus = 3;
+          _CurrentPlayer = 2;
           _beginthread(ThreadNET,0,(void *) NET_MODE_CLIENT);	
           break;
-	  }
+	    }
       Start();
 	  return 0;
     //
@@ -103,9 +116,9 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	  //
 	  // Check if a game is started
 	  //
-      if (_Started == 0) {
-        return 0;
-      }
+    if (_Started == 0) {
+      return 0;
+    }
 	  //
 	  // Check if we play "hot seat" (two players, one computer)
 	  //
@@ -165,7 +178,21 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	  // Check if we play via TCP/IP
 	  //
 	  } else if (_GameModus == 3) {
-
+      if (!NET_TurnComplete && !NET_ServerWaiting) {
+        switch (GetField(GET_X_LPARAM(lParam))) {
+          case 0:
+            NET_TurnComplete = 1;
+            break;
+          case 1:
+            DisplayWin();
+            break;
+          case 2:
+            DisplayEnd();
+            break;
+          default:
+            break;
+        }
+      }
     }
       return 0;
     case WM_PAINT:
