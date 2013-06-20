@@ -34,6 +34,7 @@ void Start() {
   _close         = 0;
   _Started       = 1;
   _RoundCount    = 0;
+  _acMessage[0] = 0;
   //
   // Force the window to send an WM_PAINT message immediately
   //
@@ -52,7 +53,6 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     return 0;    
     case WM_CREATE:
       HMENU hMenu, hSubMenu, hSubMenuNET;
-      HICON hIcon, hIconSm;
 	    //
 	    // Create handles
 	    //
@@ -228,7 +228,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine
   // Configure windows size and initialize variables by calling Start();
   //
   _Window.width = 725;
-  _Window.height = 665;
+  _Window.height = 765;
   _Board.width = 700;
   _Board.height = 600;
   _TileSize = 94;

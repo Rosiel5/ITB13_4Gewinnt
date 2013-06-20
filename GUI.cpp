@@ -7,43 +7,6 @@
 
 #include "MAIN.h"
 
-extern HWND hwnd;
-
-
-/*********************************************************************
-*
-*       IncreaseRoundCntCheckEnd
-*
-*  Function description:
-*    Increases the static round count and checks if the game is 
-*    finished or if there is a winner.
-*
-*  Parameters:
-*    FieldX - Command that shall be executed.
-*    FieldY - Pointer to command specific pData.
-*
-*  Return value:
-*    0 - Neither condition has occured.
-*    1 - Win
-*    2 - End
-*
-*  Note:
-*  This function is global because it is also called from 
-*  the WndProc callback when AI is used.
-*/
-int IncreaseRoundCntCheckEnd(int FieldX, int FieldY) {
-  //
-  // When the stone is set we have to check for win, end and increment the round count.
-  //
-  _RoundCount++;
-  if (CheckWin(FieldX, FieldY)) {  // Do we have a winner?
-    return 1;  
-  }
-  if (CheckEnd()) {                // No free coin field remaining?
-    return 2;
-  }
-  return 0;  
-}
 
 /*********************************************************************
 *
@@ -137,7 +100,7 @@ int SetTile(int FieldX) {
   }
   hdc = GetDC(hwnd);
   left = BORDER_BOARD + BORDER_TILE + ((_TileSize + BORDER_TILE*2) * FieldX);
-  top =  BORDER_BOARD + BORDER_TILE;
+  top =  BORDER_BOARD + BORDER_TOP + BORDER_TILE;
   FieldY = 0;
   while (_Field[FieldY][FieldX] == 0 && FieldY < FIELD_Y) {
     SelectObject (hdc, hPlayer);
@@ -150,23 +113,47 @@ int SetTile(int FieldX) {
   }
   FieldY--;
   _Field[FieldY][FieldX] = _CurrentPlayer;
-  top -= _TileSize + BORDER_TILE*2;
-  SelectObject (hdc, hPlayer);
-  Ellipse(hdc, left, top, left+_TileSize, top+_TileSize);
+  //top -= _TileSize + BORDER_TILE*2;
+  //SelectObject (hdc, hPlayer);
+  //Ellipse(hdc, left, top, left+_TileSize, top+_TileSize);
   ReleaseDC(hwnd, hdc);
+  InvalidateRect(hwnd, NULL,NULL);
+  UpdateWindow(hwnd);
 
   return FieldY;
 }
 
 void DisplayWin(void) {
-  HDC         hdc;
-  char        ac[100];
-
-  sprintf(ac, "Player: %d; Ein Sieg! Ein Sieg! Ein Sieg!", _CurrentPlayer);
+  sprintf_s(_acMessage, "Player %d has won. Start a new game for revange.", _CurrentPlayer);
   _Started = 0;
-  hdc = GetDC(hwnd);
-  TextOut(hdc, _Window.width/3, _Window.height/3, (LPCWSTR)&ac, 29);
-  ReleaseDC(hwnd, hdc);
+  //
+  // Force the window to send an WM_PAINT message immediately
+  //
+  InvalidateRect(hwnd, NULL,NULL);
+  UpdateWindow(hwnd);
+}
+
+void DisplayEnd(void) {
+  sprintf_s(_acMessage, "The game has ended after %d moves. Start a new game for revange.", _RoundCount);
+  _Started = 0;
+  //
+  // Force the window to send an WM_PAINT message immediately
+  //
+  InvalidateRect(hwnd, NULL,NULL);
+  UpdateWindow(hwnd);
+}
+
+void SetMessage(const char* acIn) {
+  sprintf_s(_acMessage, acIn);
+  //
+  // Force the window to send an WM_PAINT message immediately
+  //
+  InvalidateRect(hwnd, NULL,NULL);
+  UpdateWindow(hwnd);
+}
+
+void ClearMessage(void) {
+  _acMessage[0] = 0;
 }
 
 /*********************************************************************
@@ -204,9 +191,24 @@ void DrawBoard(void) {
   // Draw the field background
   //
   SelectObject (hdc, hField);
-  Rectangle(hdc, rect.left + BORDER_BOARD, rect.top + BORDER_BOARD, rect.left + _Board.width + BORDER_BOARD, rect.top + _Board.height + BORDER_BOARD);
+  Rectangle(hdc, rect.left + BORDER_BOARD, rect.top + BORDER_BOARD + BORDER_TOP, rect.left + _Board.width + BORDER_BOARD, rect.top + _Board.height + BORDER_BOARD + BORDER_TOP);
+  //
+  // Draw the status messages
+  //
+  SelectObject (hdc, hEmptyTile);
+  Rectangle(hdc, rect.left + BORDER_BOARD, rect.top + BORDER_BOARD, rect.left + _Board.width + BORDER_BOARD, rect.top + BORDER_BOARD + BORDER_TOP);
+  if (_acMessage[0] != 0) {
+    TextOutA(hdc, rect.left+30, rect.top+20, _acMessage, strlen(_acMessage));
+  } else {
+    sprintf_s(_acMessage, "Player %d! It is your turn.", _CurrentPlayer);
+    TextOutA(hdc, rect.left+30, rect.top+20, _acMessage, strlen(_acMessage));
+    _acMessage[0] = 0;
+  }
+  //
+  //Draw the tiles
+  //
   left = BORDER_BOARD + BORDER_TILE;
-  top =  BORDER_BOARD + BORDER_TILE;
+  top =  BORDER_BOARD + BORDER_TOP + BORDER_TILE;
   for(x = 0; x < FIELD_X; x++) {      // Draw the row
 	  for(y = 0; y < FIELD_Y; y++) {    // Draw the column
       switch (_Field[y][x]) {
@@ -223,49 +225,10 @@ void DrawBoard(void) {
       Ellipse(hdc, left, top, left+_TileSize, top+_TileSize);
       top += _TileSize + BORDER_TILE*2;
     }
-    top = BORDER_BOARD + BORDER_TILE;
+    top = BORDER_BOARD + BORDER_TOP + BORDER_TILE;
     left += _TileSize + BORDER_TILE*2;
   }
   EndPaint(hwnd, &ps);
-}
-
-
-static int _ChangeSize;
-
-/*********************************************************************
-*
-*       SetWindowSize
-*
-*  Function description
-*
-*
-*/
-void SetWindowSize(void) {
-  RECT rect;
-  int width;
-  int height;
-
-  GetClientRect (hwnd, &rect);
-  width  = rect.right  - rect.left;
-  height = rect.bottom - rect.top;
-  //
-  // Does the width of the windows has been changed?
-  //
-  if (_Board.width != width) {
-    _Board.width  = width;
-    _Board.height = ((width) / FIELD_X ) * FIELD_Y;
-    _TileSize = ((width - BORDER_BOARD*2) / FIELD_X) - FIELD_Y;
-  } else if (_Board.height != height) {
-    _Board.height = height;
-    _Board.width  = ((height) / FIELD_Y) * FIELD_X;
-    _TileSize = ((height - BORDER_BOARD*2) / FIELD_Y) - FIELD_Y;
-  }
-
-}
-
-void CalculateField(void) {}
-void DisplayEnd(void) {
-  _Started = 0;
 }
 
 /*************************** End of file ****************************/

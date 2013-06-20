@@ -101,4 +101,40 @@ bool CheckWin(int NewTileX, int NewTileY) {
   }
   return false;
 }
+
+/*********************************************************************
+*
+*       IncreaseRoundCntCheckEnd
+*
+*  Function description:
+*    Increases the static round count and checks if the game is 
+*    finished or if there is a winner.
+*
+*  Parameters:
+*    FieldX - Command that shall be executed.
+*    FieldY - Pointer to command specific pData.
+*
+*  Return value:
+*    0 - Neither condition has occured.
+*    1 - Win
+*    2 - End
+*
+*  Note:
+*  This function is global because it is also called from 
+*  the WndProc callback when AI is used.
+*/
+int IncreaseRoundCntCheckEnd(int FieldX, int FieldY) {
+  //
+  // When the stone is set we have to check for win, end and increment the round count.
+  //
+  _RoundCount++;
+  if (CheckWin(FieldX, FieldY)) {  // Do we have a winner?
+    return 1;  
+  }
+  if (CheckEnd()) {                // No free coin field remaining?
+    return 2;
+  }
+  return 0;  
+}
+
 /*************************** End of file ****************************/

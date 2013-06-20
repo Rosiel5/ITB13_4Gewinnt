@@ -29,6 +29,7 @@
 
 
 #define BORDER_BOARD    10  //Size of border to window frame
+#define BORDER_TOP      100 //Space for status messages
 #define BORDER_TILE     3   //Border around the tiles
 
 /*********************************************************************
@@ -65,6 +66,7 @@ EXTERN int _CurrentPlayer;              // 1: Player 1; 2: Player 2; This option
 EXTERN int _RoundCount;                 // Number of rounds we have played. Max value of round is 42 since we have 7x7 fields.
 EXTERN int _GameModus;                  // Specify wheater we play vs a computer or a player. 1: Player vs Player; 2: Player vs AI
 EXTERN int _GUIStarted;  
+EXTERN char _acMessage[256];            // Status message
 typedef struct {
     int width;
     int height;
@@ -96,20 +98,20 @@ int  GetField(int PosX);  //Returns true if correct field
 bool CheckEnd(void);	    //Returns true if field is filled up
 bool CheckWin(int X, int Y);	    //Returns true if current player has won
 void Start(void);
-
+int  IncreaseRoundCntCheckEnd(int FieldX, int FieldY);
 /*********************************************************************
 *
 *       GUI
 *
 **********************************************************************
 */
-void CalculateField(void);      // Calculates width, height and tilesize
-void SetWindowSize(void);       // Sets windows size on resize to match gamefield ratio
 int  SetTile(int FieldX);	      // Draws the animation of the falling tile
-void DisplayWin(void);			    // Drwas the win
-void DisplayEnd(void);
+void DisplayWin(void);			    // Sets the win message and ends game
+void DisplayEnd(void);          // Sets the end message and ends the game
+void SetMessage(const char* acIn);  // Set a custom message
+void ClearMessage(void);        // Clear message to automatically show status message
 void DrawBoard(void);			      // Draws the game board
-int  IncreaseRoundCntCheckEnd(int FieldX, int FieldY);
+
 
 /*********************************************************************
 *
