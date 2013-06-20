@@ -207,8 +207,8 @@ void DrawBoard(void) {
   Rectangle(hdc, rect.left + BORDER_BOARD, rect.top + BORDER_BOARD, rect.left + _Board.width + BORDER_BOARD, rect.top + _Board.height + BORDER_BOARD);
   left = BORDER_BOARD + BORDER_TILE;
   top =  BORDER_BOARD + BORDER_TILE;
-  for(x = 0; x < 7; x++) {      // Draw the row
-	  for(y = 0; y < 6; y++) {    // Draw the column
+  for(x = 0; x < FIELD_X; x++) {      // Draw the row
+	  for(y = 0; y < FIELD_Y; y++) {    // Draw the column
       switch (_Field[y][x]) {
         case 0:
           SelectObject (hdc, hEmptyTile);
@@ -253,12 +253,12 @@ void SetWindowSize(void) {
   //
   if (_Board.width != width) {
     _Board.width  = width;
-    _Board.height = ((width) / 7 ) * 6;
-    _TileSize = ((width - BORDER_BOARD*2) / 7) - 6;
+    _Board.height = ((width) / FIELD_X ) * FIELD_Y;
+    _TileSize = ((width - BORDER_BOARD*2) / FIELD_X) - FIELD_Y;
   } else if (_Board.height != height) {
     _Board.height = height;
-    _Board.width  = ((height) / 6) * 7;
-    _TileSize = ((height - BORDER_BOARD*2) / 6) - 6;
+    _Board.width  = ((height) / FIELD_Y) * FIELD_X;
+    _TileSize = ((height - BORDER_BOARD*2) / FIELD_Y) - FIELD_Y;
   }
 
 }

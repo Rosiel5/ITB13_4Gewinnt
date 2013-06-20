@@ -73,9 +73,9 @@ VOID ThreadNET(PVOID pvoid) {
     //
     NET_ServerWaiting = 1; // @TODO no idea how to do this cleanly, could just call it from the gui thread
     AddrLen = sizeof(RemoteAddr);
-    r = accept(Sock, &RemoteAddr, &AddrLen);
+    Sock = accept(Sock, &RemoteAddr, &AddrLen);
     NET_ServerWaiting = 0;
-    if (r < 0) {
+    if (Sock == SOCKET_ERROR) {
       DisplayErrorMessageBox(MB_OK, L"accept(): Accept failed.");
       goto CleanAndExit;
     }
@@ -123,7 +123,7 @@ VOID ThreadNET(PVOID pvoid) {
     
   } else if (Mode == NET_MODE_CLIENT) {
     Addr.sin_family = AF_INET;
-    Addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    Addr.sin_addr.s_addr = inet_addr("192.168.100.1");
     Addr.sin_port = htons(5555);
     r = connect(Sock, (SOCKADDR *) &Addr, sizeof (Addr));
     if (r == SOCKET_ERROR) {
