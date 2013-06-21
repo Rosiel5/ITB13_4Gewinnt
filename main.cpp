@@ -32,6 +32,7 @@ void Start() {
   }
   memset(_Field, 0,sizeof(_Field));
   _close         = 0;
+  _CurrentPlayer = 1;
   _Started       = 1;
   _RoundCount    = 0;
   _acMessage[0] = 0;
@@ -45,7 +46,9 @@ void Start() {
 
 LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
   int r;
-  int RandomFieldX;
+  int FieldX;
+  int pX;
+  int pY;
 
   switch (message) {
     case WM_RBUTTONDOWN:
@@ -78,10 +81,6 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     // Here we initialize a new game
     //
     case WM_COMMAND:
-      //
-      // Set Current Player to the default value of 1, as doing it in Start() would overwrite the setting in NET.
-      //
-      _CurrentPlayer = 1;
       switch(LOWORD(wParam)) {
         case ID_NEWGAME_PvsP:
           _GameModus = 1;
@@ -94,15 +93,15 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
           // Player 1 is always the server.
           //
           _GameModus = 3;
-          _CurrentPlayer = 1;
           _beginthread(ThreadNET,0,(void *) NET_MODE_SERVER);	
           break;
         case ID_NEWGAME_PvP_NET_Client:
           //
-          // Player 2 is always the client.
+          // Player 2 is always the client, therfore we block the ability to set
+          // tiles, as the server (Player 1) is always first.
           //
           _GameModus = 3;
-          _CurrentPlayer = 2;
+          NET_TurnComplete = 1;
           _beginthread(ThreadNET,0,(void *) NET_MODE_CLIENT);	
           break;
 	    }
@@ -145,26 +144,36 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
       //
       r = GetField(GET_X_LPARAM(lParam));
       switch (r) {
-        case 0:
-          SwitchPlayer();
-          //
-          // We have switched to the AI,
-          // the AI will attempt to perform a valid move.
-          //
-          do {
-            RandomFieldX = rand() % FIELD_X;
-            r = SetTile(RandomFieldX);
-          } while (r == -1);
-          switch (IncreaseRoundCntCheckEnd(RandomFieldX, r)) {
-            case 1:
-              DisplayWin();
-              break;
-            case 2:
-              DisplayEnd();
-              break;
+      case 0:
+        SwitchPlayer();
+        //
+        // We have switched to the AI,
+        // the AI will attempt to perform a valid move.
+        //
+        do {
+          if (CheckNumInARow(3, &pX, &pY, _CurrentPlayer)){  // Kann ich gewinnen?
+            r = SetTile(pX);
+          } else if (CheckNumInARow(3,  &pX,  &pY, 1)) {     // Kann der Gegner gewinnen?
+            r = SetTile(pX);
+          } else if (CheckNumInARow(2,  &pX,  &pY, 2)) {     // Setze Stein an 2er Folge
+            r = SetTile(pX);
+          } else if(CheckNumInARow(1, &pX,  &pY, 2)) {       // Setze Stein an 1er Folge
+            r = SetTile(pX);
+          } else {                                           // Sonst zufällig
+	        pX = rand() % FIELD_X;
+            r = SetTile(	rand() % FIELD_X);
           }
-          SwitchPlayer();
+        } while (r == -1);
+        switch (IncreaseRoundCntCheckEnd(pX, r)) {
+        case 1:		
+          DisplayWin();
           break;
+        case 2:
+          DisplayEnd();
+          break;
+        }
+        SwitchPlayer();
+        break;
         case 1:
           DisplayWin();
           break;
@@ -184,9 +193,13 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             NET_TurnComplete = 1;
             break;
           case 1:
+            NET_TurnComplete = 1;
+            NET_EndWinFlag |= _CurrentPlayer;
             DisplayWin();
             break;
           case 2:
+            NET_TurnComplete = 1;
+            NET_EndWinFlag |= NET_END_FLAG_VAL;
             DisplayEnd();
             break;
           default:
@@ -227,7 +240,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine
   //
   // Configure windows size and initialize variables by calling Start();
   //
-  _Window.width = 725;
+  _Window.width = 735;
   _Window.height = 765;
   _Board.width = 700;
   _Board.height = 600;

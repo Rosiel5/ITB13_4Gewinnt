@@ -11,6 +11,7 @@
 
 #pragma comment(lib, "ws2_32.lib")
 
+
 static void _DisplayError(char Type) {
   TCHAR        ac[100];
   if (Type == 1) {
@@ -21,12 +22,67 @@ static void _DisplayError(char Type) {
   DisplayErrorMessageBox(MB_OK, ac);
 }
 
+static int _Receive(SOCKET Sock, char * acBuf, int NumBytes){
+  int r;
+  // @TODO Status bar: waiting for other player
+  r = recv(Sock, acBuf, NumBytes, NULL);
+  if (r < 0) {
+    _DisplayError(0);
+    return -1;
+  }
+  _RoundCount++;
+  //
+  // The other player has also finished his turn, reset the flag now.
+  //
+  SwitchPlayer();
+  NET_TurnComplete = 0;
+  return r;
+}
+
+static int _HandleWait(SOCKET Sock, char * acBuf, int NumBytes) {
+  int r;
+  r = _Receive(Sock, acBuf, NumBytes);
+  memcpy(_Field, &acBuf[1], sizeof(_Field));
+  if ((acBuf[0] & ~NET_END_FLAG_VAL) > 0) {
+    NET_EndWinFlag = acBuf[0] & ~NET_END_FLAG_VAL;
+    DisplayWin();
+    return -1;
+  } else if ((acBuf[0] & NET_END_FLAG_VAL) > 0) {
+    DisplayEnd();
+    return -1;
+  } else {
+    //
+    // Redraw the field according to the new array.
+    //
+    InvalidateRect(hwnd, NULL,NULL);
+    UpdateWindow(hwnd);
+  }
+  return r;
+}
+
+static int _Send(SOCKET Sock, char * acBuf, int NumBytes){
+  int r;
+  //
+  // The first value deceides whether we are transfering data or a control message
+  //
+  r = send(Sock, acBuf, NumBytes, NULL);
+  if (r < 0) {
+    _DisplayError(1);
+    return -1;
+  }
+  SwitchPlayer();
+  return r;
+}
+
+
 VOID ThreadNET(PVOID pvoid) {
   WORD         wVersionRequested;
   WSADATA      wsaData;
   SOCKET       Sock = 0;
   sockaddr_in  Addr;
   sockaddr     RemoteAddr;
+  char *       acBuf;
+  int          BufLen;
   int          AddrLen;
   char         Mode;
   int          r;
@@ -47,6 +103,9 @@ VOID ThreadNET(PVOID pvoid) {
     DisplayErrorMessageBox(MB_OK, L"socket(): Could not create socket");
     goto CleanAndExit;
   }
+  BufLen = sizeof(_Field) + 1;
+  acBuf = new char[BufLen];
+  memset(acBuf, 0, BufLen);
   //
   // Check wether we have to act as a server or as a client.
   //
@@ -95,27 +154,13 @@ VOID ThreadNET(PVOID pvoid) {
           while (!NET_TurnComplete) {
             Sleep(50);
           }
-          r = send(Sock, (char *)&_Field, sizeof(_Field), NULL);
-          if (r < 0) {
-            _DisplayError(1);
-          }
-          SwitchPlayer();
+          memset(acBuf, 0, BufLen);
+          acBuf[0] |= NET_EndWinFlag;
+          memcpy(&acBuf[1], _Field, sizeof(_Field));
+          r = _Send(Sock, acBuf, BufLen);
           break;
         case 2:
-          // @TODO Status bar: waiting for other player
-          r = recv(Sock, (char *)&_Field, sizeof(_Field), NULL);
-          if (r < 0) {
-            _DisplayError(0);
-          }
-          //
-          // Redraw the field according to the new array.
-          //
-          _redraw = 1;
-          //
-          // The other player has also finished his turn, reset the flag now.
-          //
-          SwitchPlayer();
-          NET_TurnComplete = 0;
+          r = _HandleWait(Sock, acBuf, BufLen);
           break;
       }
     } while (r > 0);
@@ -123,7 +168,7 @@ VOID ThreadNET(PVOID pvoid) {
     
   } else if (Mode == NET_MODE_CLIENT) {
     Addr.sin_family = AF_INET;
-    Addr.sin_addr.s_addr = inet_addr("192.168.100.1");
+    Addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     Addr.sin_port = htons(5555);
     r = connect(Sock, (SOCKADDR *) &Addr, sizeof (Addr));
     if (r == SOCKET_ERROR) {
@@ -139,20 +184,7 @@ VOID ThreadNET(PVOID pvoid) {
       //
       switch (_CurrentPlayer) {
         case 1:
-          // @TODO Status bar: waiting for other player
-          r = recv(Sock, (char *)&_Field, sizeof(_Field), NULL);
-          if (r < 0) {
-            _DisplayError(0);
-          }
-          //
-          // Redraw the field according to the new array.
-          //
-          _redraw = 1;
-          //
-          // The other player has also finished his turn, reset the flag now.
-          //
-          SwitchPlayer();
-          NET_TurnComplete = 0;
+          r = _HandleWait(Sock, acBuf, BufLen);
           break;
         case 2:
           //
@@ -162,16 +194,16 @@ VOID ThreadNET(PVOID pvoid) {
           while (!NET_TurnComplete) {
             Sleep(50);
           }
-          r = send(Sock, (char *)&_Field, sizeof(_Field), NULL);
-          if (r < 0) {
-            _DisplayError(1);
-          }
-          SwitchPlayer();
+          memset(acBuf, 0, BufLen);
+          acBuf[0] |= NET_EndWinFlag;
+          memcpy(&acBuf[1], _Field, sizeof(_Field));
+          r = _Send(Sock, acBuf, BufLen);
           break;
       }
     } while (r > 0);
   }
 CleanAndExit:
+  delete acBuf;
   closesocket(Sock);
   WSACleanup();
 }

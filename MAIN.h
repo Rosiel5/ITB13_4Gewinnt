@@ -46,6 +46,7 @@
 
 #define NET_MODE_SERVER           1
 #define NET_MODE_CLIENT           2
+#define NET_END_FLAG_VAL          (1u << 3)
 
 /*********************************************************************
 *
@@ -78,6 +79,7 @@ EXTERN BOARD_SIZE _Board;
 EXTERN BOARD_SIZE _Window;
 EXTERN char NET_ServerWaiting;
 EXTERN char NET_TurnComplete;
+EXTERN char NET_EndWinFlag;
 
 /*********************************************************************
 *
@@ -119,6 +121,8 @@ void DrawBoard(void);			      // Draws the game board
 *
 **********************************************************************
 */
+int CheckNumInARow(int NumToBeChecked, int *pX, int *pY, int PlayerToBeChecked);
+
 void CalculateNextMove(unsigned int );   // Calculates the next move
 
 /*********************************************************************

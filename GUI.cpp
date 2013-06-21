@@ -124,7 +124,7 @@ int SetTile(int FieldX) {
 }
 
 void DisplayWin(void) {
-  sprintf_s(_acMessage, "Player %d has won. Start a new game for revange.", _CurrentPlayer);
+  sprintf_s(_acMessage, "Player %d has won. Start a new game for revenge.", _CurrentPlayer);
   _Started = 0;
   //
   // Force the window to send an WM_PAINT message immediately
@@ -134,7 +134,7 @@ void DisplayWin(void) {
 }
 
 void DisplayEnd(void) {
-  sprintf_s(_acMessage, "The game has ended after %d moves. Start a new game for revange.", _RoundCount);
+  sprintf_s(_acMessage, "The game has ended after %d moves. Start a new game for revenge.", _RoundCount);
   _Started = 0;
   //
   // Force the window to send an WM_PAINT message immediately
@@ -222,13 +222,12 @@ void DrawBoard(void) {
           SelectObject (hdc, hPlayerTwo);
           break;
       }
+      left = BORDER_BOARD + BORDER_TILE + ((_TileSize + BORDER_TILE*2) * x);
+      top =  BORDER_BOARD + BORDER_TOP + BORDER_TILE + ((_TileSize + BORDER_TILE*2) * y);
       Ellipse(hdc, left, top, left+_TileSize, top+_TileSize);
-      top += _TileSize + BORDER_TILE*2;
     }
-    top = BORDER_BOARD + BORDER_TOP + BORDER_TILE;
-    left += _TileSize + BORDER_TILE*2;
   }
-  EndPaint(hwnd, &ps);
+  ReleaseDC(hwnd, hdc);
 }
 
 /*************************** End of file ****************************/
