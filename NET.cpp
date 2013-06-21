@@ -11,7 +11,11 @@
 
 #pragma comment(lib, "ws2_32.lib")
 
-
+/*********************************************************************
+*
+*       _Displayerror()
+*
+*/
 static void _DisplayError(char Type) {
   TCHAR        ac[100];
   if (Type == 1) {
@@ -22,6 +26,11 @@ static void _DisplayError(char Type) {
   DisplayErrorMessageBox(MB_OK, ac);
 }
 
+/*********************************************************************
+*
+*       _Receive()
+*
+*/
 static int _Receive(SOCKET Sock, char * acBuf, int NumBytes){
   int r;
   // @TODO Status bar: waiting for other player
@@ -39,6 +48,11 @@ static int _Receive(SOCKET Sock, char * acBuf, int NumBytes){
   return r;
 }
 
+/*********************************************************************
+*
+*       _HandleWait()
+*
+*/
 static int _HandleWait(SOCKET Sock, char * acBuf, int NumBytes) {
   int r;
   r = _Receive(Sock, acBuf, NumBytes);
@@ -60,6 +74,11 @@ static int _HandleWait(SOCKET Sock, char * acBuf, int NumBytes) {
   return r;
 }
 
+/*********************************************************************
+*
+*       _Send()
+*
+*/
 static int _Send(SOCKET Sock, char * acBuf, int NumBytes){
   int r;
   //
@@ -74,7 +93,15 @@ static int _Send(SOCKET Sock, char * acBuf, int NumBytes){
   return r;
 }
 
-
+/*********************************************************************
+*
+*       ThreadNET()
+*
+* Function description:
+*   Thread for network communication and handling
+*   in network game modus
+*
+*/
 VOID ThreadNET(PVOID pvoid) {
   WORD         wVersionRequested;
   WSADATA      wsaData;

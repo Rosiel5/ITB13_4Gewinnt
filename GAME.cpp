@@ -7,11 +7,15 @@
 
 #include "MAIN.h"
 
-
-//
-// Process the static field array and check if there
-// is space left to place tiles.
-//
+/*********************************************************************
+*
+*       CheckEnd()
+*
+* Function description:
+*   Check if the board is filled up
+*   This is the case after 42 rounds.
+*
+*/
 bool CheckEnd(void) {
   if ((FIELD_X * FIELD_Y) > _RoundCount) {
     return false;
@@ -20,10 +24,15 @@ bool CheckEnd(void) {
   }
 }
 
-//
-// Process the static field array and check if there
-// are 4 tiles of same colour in a row.
-//
+/*********************************************************************
+*
+*       CheckWin()
+*
+* Function description:
+*   Check if the last set tile forms a row of 4
+*   Return true to indicate the current player has won
+*
+*/
 bool CheckWin(int NewTileX, int NewTileY) {
   int y;
   int x;
@@ -40,7 +49,6 @@ bool CheckWin(int NewTileX, int NewTileY) {
       return true;
     }
   }
-  
   //
   // Check horizontal.
   //
@@ -62,10 +70,6 @@ bool CheckWin(int NewTileX, int NewTileY) {
     x--;
     y++;
   }
-  //
-  // Check the diagonal by going from left to right.
-  //
-
   while (((x + 3) < FIELD_X) && ((y - 3) >= 0)) {
     if ((_Field[y    ][x    ] == _CurrentPlayer) &&
         (_Field[y - 1][x + 1] == _CurrentPlayer) &&
@@ -86,9 +90,6 @@ bool CheckWin(int NewTileX, int NewTileY) {
     x++;
     y++;
   }
-  //
-  // Check the diagonal by going from right to left.
-  //
   while (((x - 3) > 0) && ((y - 3) >= 0)) {
     if ((_Field[y    ][x    ] == _CurrentPlayer) &&
         (_Field[y - 1][x - 1] == _CurrentPlayer) &&
@@ -105,7 +106,7 @@ bool CheckWin(int NewTileX, int NewTileY) {
 
 /*********************************************************************
 *
-*       IncreaseRoundCntCheckEnd
+*       IncreaseRoundCntCheckEnd()
 *
 *  Function description:
 *    Increases the static round count and checks if the game is 
@@ -129,10 +130,10 @@ int IncreaseRoundCntCheckEnd(int FieldX, int FieldY) {
   // When the stone is set we have to check for win, end and increment the round count.
   //
   _RoundCount++;
-  if (CheckWin(FieldX, FieldY)) {  // Do we have a winner?
+  if (CheckWin(FieldX, FieldY)) {                                     // Do we have a winner?
     return 1;  
   }
-  if (CheckEnd()) {                // No free coin field remaining?
+  if (CheckEnd()) {                                                   // No free coin field remaining?
     return 2;
   }
   return 0;  

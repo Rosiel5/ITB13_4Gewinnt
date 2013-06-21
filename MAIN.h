@@ -28,9 +28,9 @@
 #define FIELD_Y         6
 
 
-#define BORDER_BOARD    10  //Size of border to window frame
-#define BORDER_TOP      100 //Space for status messages
-#define BORDER_TILE     3   //Border around the tiles
+#define BORDER_BOARD    10              //Size of border to window frame
+#define BORDER_TOP      100             //Space for status messages
+#define BORDER_TILE     3               //Border around the tiles
 
 /*********************************************************************
 *
@@ -87,8 +87,8 @@ EXTERN char NET_EndWinFlag;
 *
 **********************************************************************
 */
-int  GetPlayer(void);         //Returns player 1 or 2
-void SwitchPlayer(void);      //Changes player
+int  GetPlayer(void);                   //Returns player 1 or 2
+void SwitchPlayer(void);                //Changes player
 
 /*********************************************************************
 *
@@ -96,9 +96,9 @@ void SwitchPlayer(void);      //Changes player
 *
 **********************************************************************
 */
-int  GetField(int PosX);  //Returns true if correct field
-bool CheckEnd(void);	    //Returns true if field is filled up
-bool CheckWin(int X, int Y);	    //Returns true if current player has won
+int  GetField(int PosX);                //Returns true if correct field
+bool CheckEnd(void);	                  //Returns true if field is filled up
+bool CheckWin(int X, int Y);	          //Returns true if current player has won
 void Start(void);
 int  IncreaseRoundCntCheckEnd(int FieldX, int FieldY);
 /*********************************************************************
@@ -107,12 +107,12 @@ int  IncreaseRoundCntCheckEnd(int FieldX, int FieldY);
 *
 **********************************************************************
 */
-int  SetTile(int FieldX);	      // Draws the animation of the falling tile
-void DisplayWin(void);			    // Sets the win message and ends game
-void DisplayEnd(void);          // Sets the end message and ends the game
-void SetMessage(const char* acIn);  // Set a custom message
-void ClearMessage(void);        // Clear message to automatically show status message
-void DrawBoard(void);			      // Draws the game board
+int  SetTile(int FieldX);	              // Draws the animation of the falling tile
+void DisplayWin(void);			            // Sets the win message and ends game
+void DisplayEnd(void);                  // Sets the end message and ends the game
+void SetMessage(const char* acIn);      // Set a custom message
+void ClearMessage(void);                // Clear message to automatically show status message
+void DrawBoard(void);			              // Draws the game board
 
 
 /*********************************************************************
@@ -122,7 +122,6 @@ void DrawBoard(void);			      // Draws the game board
 **********************************************************************
 */
 int CheckNumInARow(int NumToBeChecked, int *pX, int *pY, int PlayerToBeChecked);
-
 void CalculateNextMove(unsigned int );   // Calculates the next move
 
 /*********************************************************************

@@ -2,13 +2,24 @@
 *   File: MAIN.cpp
 * 
 * Purpose: 
+*   Application entry,
+*   includes message loop, main thread and GUI thread
 *
 */
 
-#define MAIN
+#define MAIN                                                          // Indicate globals to be included here
 
 #include "MAIN.h"
 
+/*********************************************************************
+*
+*       ThreadGUI()
+*
+* Function description:
+*   GUI thread to redraw the board if neccessary.
+*
+*
+*/
 VOID ThreadGUI(PVOID pvoid) {
   do {
     if(_redraw == 1) {
@@ -19,14 +30,18 @@ VOID ThreadGUI(PVOID pvoid) {
   } while (_close != 1);
 }
 
-//
-// Initialize all variables and repaint the field
-//
+/*********************************************************************
+*
+*       Start()
+*
+* Function description:
+*   Initializes all variables on start of new game
+*   Starts GUI thread, if not already done
+*   Updates window to paint the board
+*
+*/
 void Start() {
   if (_GUIStarted == 0) {
-    //
-    // Start GUI Thread
-    //
     _beginthread(ThreadGUI,0,NULL);	
 	  _GUIStarted = 1;
   }
@@ -43,7 +58,15 @@ void Start() {
   UpdateWindow(hwnd);
 }
 
-
+/*********************************************************************
+*
+*       WndProc()
+*
+* Function description:
+*   Callback function for main thread
+*   Handles all messages and calls functionalities
+*
+*/
 LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
   int r;
   int FieldX;
@@ -82,47 +105,41 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     //
     case WM_COMMAND:
       switch(LOWORD(wParam)) {
-        case ID_NEWGAME_PvsP:
-          _GameModus = 1;
-          break;
-        case ID_NEWGAME_PvsAI:
-          _GameModus = 2;
-		      break;
-        case ID_NEWGAME_PvP_NET_Server:
-          //
-          // Player 1 is always the server.
-          //
-          _GameModus = 3;
-          _beginthread(ThreadNET,0,(void *) NET_MODE_SERVER);	
-          break;
-        case ID_NEWGAME_PvP_NET_Client:
-          //
-          // Player 2 is always the client, therfore we block the ability to set
-          // tiles, as the server (Player 1) is always first.
-          //
-          _GameModus = 3;
-          NET_TurnComplete = 1;
-          _beginthread(ThreadNET,0,(void *) NET_MODE_CLIENT);	
-          break;
+      case ID_NEWGAME_PvsP:
+        _GameModus = 1;
+        break;
+      case ID_NEWGAME_PvsAI:
+        _GameModus = 2;
+		    break;
+      case ID_NEWGAME_PvP_NET_Server:
+        //
+        // Player 1 is always the server.
+        //
+        _GameModus = 3;
+        _beginthread(ThreadNET,0,(void *) NET_MODE_SERVER);	
+        break;
+      case ID_NEWGAME_PvP_NET_Client:
+        //
+        // Player 2 is always the client, therfore we block the ability to set
+        // tiles, as the server (Player 1) is always first.
+        //
+        _GameModus = 3;
+        NET_TurnComplete = 1;
+        _beginthread(ThreadNET,0,(void *) NET_MODE_CLIENT);	
+        break;
 	    }
       Start();
-	  return 0;
-    //
-    // When we get a WM_LBUTTONDOWN, we have to perform gaming action like
-    // Set a tile, calculate winner etc...
-    //
-    case WM_LBUTTONDOWN:
-	  //
-	  // Check if a game is started
-	  //
-    if (_Started == 0) {
-      return 0;
-    }
-	  //
-	  // Check if we play "hot seat" (two players, one computer)
-	  //
-	  if (_GameModus == 1) {
-      switch (GetField(GET_X_LPARAM(lParam))) {
+	    return 0;
+      //
+      // When we get a WM_LBUTTONDOWN, we have to perform gaming action like
+      // Set a tile, calculate winner etc...
+      //
+      case WM_LBUTTONDOWN:
+      if (_Started == 0) {                                            // Check if a game is started
+        return 0;
+      }
+	    if (_GameModus == 1) {                                          // Check if we play "hot seat" (two players, one computer)
+        switch (GetField(GET_X_LPARAM(lParam))) {
         case 0:
           SwitchPlayer();
           break;
@@ -134,61 +151,56 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
           break;
         default:
           break;
-      }
-	  //
-	  // Check if we play vs a AI
-	  //
-	  } else if (_GameModus == 2) {  
-      //
-      //
-      //
-      r = GetField(GET_X_LPARAM(lParam));
-      switch (r) {
-      case 0:
-        SwitchPlayer();
-        //
-        // We have switched to the AI,
-        // the AI will attempt to perform a valid move.
-        //
-        do {
-          if (CheckNumInARow(3, &pX, &pY, _CurrentPlayer)){  // Kann ich gewinnen?
-            r = SetTile(pX);
-          } else if (CheckNumInARow(3,  &pX,  &pY, 1)) {     // Kann der Gegner gewinnen?
-            r = SetTile(pX);
-          } else if (CheckNumInARow(2,  &pX,  &pY, 2)) {     // Setze Stein an 2er Folge
-            r = SetTile(pX);
-          } else if(CheckNumInARow(1, &pX,  &pY, 2)) {       // Setze Stein an 1er Folge
-            r = SetTile(pX);
-          } else {                                           // Sonst zufällig
-	        pX = rand() % FIELD_X;
-            r = SetTile(	rand() % FIELD_X);
+        }
+	    } else if (_GameModus == 2) {                                   // Check if we play vs a AI
+        r = GetField(GET_X_LPARAM(lParam));
+        switch (r) {
+        case 0:
+          SwitchPlayer();
+          //
+          // We have switched to the AI,
+          // the AI will attempt to perform a valid move.
+          //
+          do {
+            if (CheckNumInARow(3, &pX, &pY, _CurrentPlayer)){         // May 'I' win?
+              r = SetTile(pX);
+            } else if (CheckNumInARow(3,  &pX,  &pY, 1)) {            // May I create a row of 4?
+              r = SetTile(pX);
+            } else if (CheckNumInARow(2,  &pX,  &pY, 2)) {            // May I create a row of 3?
+              r = SetTile(pX);
+            } else if(CheckNumInARow(1, &pX,  &pY, 2)) {              // May I create a row of 2?
+              r = SetTile(pX);
+            } else {                                                  // Set random tile
+              srand(_RoundCount);
+	            pX = rand() % FIELD_X;
+              r = SetTile(	rand() % FIELD_X);
+            }
+          } while (r == -1);
+          switch (IncreaseRoundCntCheckEnd(pX, r)) {
+          case 1:		
+            DisplayWin();
+            break;
+          case 2:
+            DisplayEnd();
+            break;
           }
-        } while (r == -1);
-        switch (IncreaseRoundCntCheckEnd(pX, r)) {
-        case 1:		
-          DisplayWin();
+          SwitchPlayer();
           break;
+        case 1:
+            DisplayWin();
+            break;
         case 2:
-          DisplayEnd();
+            DisplayEnd();
+            break;
+        default:
           break;
         }
-        SwitchPlayer();
-        break;
-        case 1:
-          DisplayWin();
-          break;
-        case 2:
-          DisplayEnd();
-          break;
-        default:
-        break;
-      }
-    //
-	  // Check if we play via TCP/IP
-	  //
-	  } else if (_GameModus == 3) {
-      if (!NET_TurnComplete && !NET_ServerWaiting) {
-        switch (GetField(GET_X_LPARAM(lParam))) {
+      //
+	    // Check if we play via TCP/IP
+	    //
+	    } else if (_GameModus == 3) {
+        if (!NET_TurnComplete && !NET_ServerWaiting) {
+          switch (GetField(GET_X_LPARAM(lParam))) {
           case 0:
             NET_TurnComplete = 1;
             break;
@@ -204,9 +216,9 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
           default:
             break;
+          }
         }
       }
-    }
       return 0;
     case WM_PAINT:
       _redraw = 1;
@@ -219,6 +231,16 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
   return DefWindowProc (hwnd, message, wParam, lParam);
 }
 
+/*********************************************************************
+*
+*       WinMain()
+*
+* Function description:
+*   Application entry
+*   Create window,
+*   run message loop
+*
+*/
 int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int iCmdShow) {
   static TCHAR szAppName[] = L"4-Gewinnt";
   MSG          msg ;

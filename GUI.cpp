@@ -1,7 +1,7 @@
 /********************************************************************
 *   File: GUI.cpp
 * 
-* Purpose: 
+* Purpose: Provide the gui related functions and handle tile set
 *
 */
 
@@ -12,8 +12,11 @@
 *
 *       _GetField()
 *
-*  Function description
-*
+* Function description
+*   Get the field for the new tile depending on the position fo click
+*   Calculate Column,
+*   Set the tile in the column
+*   Check if the game has ended with this move
 *
 *  Return values
 *     0 succes (stone is set)
@@ -57,16 +60,14 @@ int GetField(int PosX) {
   return IncreaseRoundCntCheckEnd(FieldX, FieldY);
 }
 
-
 /*********************************************************************
 *
-*       SetTile
+*       SetTile()
 *
-*  Function description
-*
-*
-*  Return values
-*    0:   
+* Function description
+*   Check if the tile can be set in the given column,
+*   animate the tile and return the set row.
+* 
 */
 int SetTile(int FieldX) {
   int FieldY;
@@ -113,9 +114,6 @@ int SetTile(int FieldX) {
   }
   FieldY--;
   _Field[FieldY][FieldX] = _CurrentPlayer;
-  //top -= _TileSize + BORDER_TILE*2;
-  //SelectObject (hdc, hPlayer);
-  //Ellipse(hdc, left, top, left+_TileSize, top+_TileSize);
   ReleaseDC(hwnd, hdc);
   InvalidateRect(hwnd, NULL,NULL);
   UpdateWindow(hwnd);
@@ -123,6 +121,15 @@ int SetTile(int FieldX) {
   return FieldY;
 }
 
+/*********************************************************************
+*
+*       DisplayWin()
+*
+* Function description:
+*   Handle a win.
+*   Set win message and set game to be stopped
+*
+*/
 void DisplayWin(void) {
   sprintf_s(_acMessage, "Player %d has won. Start a new game for revenge.", _CurrentPlayer);
   _Started = 0;
@@ -133,6 +140,15 @@ void DisplayWin(void) {
   UpdateWindow(hwnd);
 }
 
+/*********************************************************************
+*
+*       DisplayEnd()
+*
+* Function description:
+*   Handle a game end.
+*   Set end message and set game to be stopped
+*
+*/
 void DisplayEnd(void) {
   sprintf_s(_acMessage, "The game has ended after %d moves. Start a new game for revenge.", _RoundCount);
   _Started = 0;
@@ -143,6 +159,14 @@ void DisplayEnd(void) {
   UpdateWindow(hwnd);
 }
 
+/*********************************************************************
+*
+*       SetMessage()
+*
+* Function description:
+*   Set a custom message
+*
+*/
 void SetMessage(const char* acIn) {
   sprintf_s(_acMessage, acIn);
   //
@@ -152,16 +176,24 @@ void SetMessage(const char* acIn) {
   UpdateWindow(hwnd);
 }
 
+/*********************************************************************
+*
+*       ClearMessage()
+*
+* Function description:
+*   Clear the message to display normal status messages
+*
+*/
 void ClearMessage(void) {
   _acMessage[0] = 0;
 }
 
 /*********************************************************************
 *
-*       DrawBoard
+*       DrawBoard()
 *
-*  Function description
-*    
+* Function description:
+*   Draw the board and the status messages.    
 *
 */
 void DrawBoard(void) {
@@ -209,8 +241,8 @@ void DrawBoard(void) {
   //
   left = BORDER_BOARD + BORDER_TILE;
   top =  BORDER_BOARD + BORDER_TOP + BORDER_TILE;
-  for(x = 0; x < FIELD_X; x++) {      // Draw the row
-	  for(y = 0; y < FIELD_Y; y++) {    // Draw the column
+  for(x = 0; x < FIELD_X; x++) {                                      // Draw the row
+	  for(y = 0; y < FIELD_Y; y++) {                                    // Draw the column
       switch (_Field[y][x]) {
         case 0:
           SelectObject (hdc, hEmptyTile);

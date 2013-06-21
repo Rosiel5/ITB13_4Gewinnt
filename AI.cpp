@@ -7,7 +7,18 @@
 
 #include "MAIN.h"
 
-
+/*********************************************************************
+*
+*       CheckIf4TiesCanBeSetCrossLineRightLeft()
+*
+* Function description:
+*   This function checks weather theare are enough spaces to 
+*   be able to win the game (set 4ties in a cross row)
+*   We can be sure, that xPos is the "outtest" tie
+*   This means for left to right check: the riggest one
+*               right to left check: the leftest one
+*
+*/
 int CheckIf4TiesCanBeSetCrossLineRightLeft(int xPos, int yPos, int RowWithSpace, int CurrentPlayer) {
   int cnt = 0;
   int OppositePlayer;
@@ -95,8 +106,7 @@ int CheckIf4TiesCanBeSetCrossLineRightLeft(int xPos, int yPos, int RowWithSpace,
         } while (_Field[yPos][xPos] == CurrentPlayer);
         if ((!((xPos < 0) || (yPos < 0))) && _Field[yPos+1][xPos]) {
           return xPos;        
-        }
-        else {
+        } else {
           return 0;
         }
       }
@@ -106,17 +116,18 @@ int CheckIf4TiesCanBeSetCrossLineRightLeft(int xPos, int yPos, int RowWithSpace,
   }  
 }
 
-//
-// This function checks weather theare are enough spaces to 
-// be able to win the game (set 4ties in a cross row)
-// We can be sure, that xPos is the "outtest" tie
-// This means for left to right check: the riggest one
-//                right to left check: the leftest one
-//
-// return:
-//   >0: X Position where tie should be set
-//    0: impossible to set 4 ties
-//
+/*********************************************************************
+*
+*       CheckIf4TiesCanBeSetCrossLineLeftRight()
+*
+* Function description:
+*   This function checks weather theare are enough spaces to 
+*   be able to win the game (set 4ties in a cross row)
+*   We can be sure, that xPos is the "outtest" tie
+*   This means for left to right check: the riggest one
+*               right to left check: the leftest one
+*
+*/
 int CheckIf4TiesCanBeSetCrossLineLeftRight(int xPos, int yPos, int RowWithSpace, int CurrentPlayer) {
   int cnt = 0;
   int OppositePlayer;
@@ -216,15 +227,19 @@ int CheckIf4TiesCanBeSetCrossLineLeftRight(int xPos, int yPos, int RowWithSpace,
   }  
 }
 
-//
-// This functions checks wheater there are enough spaces to
-// be able to win the game (set 4 ties in this row/column)
-// We can be sure, that xPos is the last tie of the row to be checked
-//
-// return values:
-//   1: 4 ties can be set
-//   0: impossible to set 4 ties
-//
+
+/*********************************************************************
+*
+*       CheckIf4TiesCanBeSetCrossLineLeftRight()
+*
+* Function description:
+*   This functions checks wheater there are enough spaces to 
+*   be able to win the game (set 4 ties in this row/column)
+*   We can be sure, that xPos is the last tie of the row to be checked
+*   
+*   
+*
+*/
 
 int CheckIf4TiesCanBeSetVertical(int xPos, int yPos, int RowWithSpace, int CurrentPlayer) {
   int cnt = 0;
@@ -289,23 +304,29 @@ int CheckIf4TiesCanBeSetVertical(int xPos, int yPos, int RowWithSpace, int Curre
 }
 
 
+/*********************************************************************
+*
+*       CheckIf4TiesCanBeSetCrossLineLeftRight()
+*
+* Function description:
+*   This function go through the whole field array
+*   and looks if there are NumToBeChecked tiles in a "row".
+*   If so, it checks wheater there is a possibility for the opposite
+*   to set the fourth tile in order to win. If both conditions are true
+*   the function returns an intenger where the first byte contains X value
+*   and the second byte contains Y value
+*
+*   Parameters:
+*     int NumToBeChecked: Number of tiles to be checked. (1-3)
+*     int Player: Specifies the player to be checked
+*
+*   return values:
+*      0: No possible field is available
+*      1: Possible field is available
+*                          and Bit[8:15] contains Y value
+*
+*/
 
-//
-// This function go through the whole field array
-// and looks if there are NumToBeChecked tiles in a "row".
-// If so, it checks wheater there is a possibility for the opposite
-// to set the fourth tile in order to win. If both conditions are true
-// the function returns an intenger where the first byte contains X value
-// and the second byte contains Y value
-//
-// Parameters:
-//   int NumToBeChecked: Number of tiles to be checked. (1-3)
-//   int Player: Specifies the player to be checked
-//
-// return values:
-//    0: No possible field is available
-//    1: Possible field is available
-//                        and Bit[8:15] contains Y value
 int CheckNumInARow(int NumToBeChecked, int *pX, int *pY, int PlayerToBeChecked) {
   int cnt;
   int x;
