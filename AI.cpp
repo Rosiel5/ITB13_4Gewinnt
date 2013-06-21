@@ -199,8 +199,8 @@ int CheckIf4TiesCanBeSetCrossLineLeftRight(int xPos, int yPos, int RowWithSpace,
     } else {
       //
       // Try to set the tie at the beginning of the row
-      //
-      if (_Field[FirstTieY+1][FirstTieX-1] == 0)  {
+      // asd
+      if ((_Field[FirstTieY+1][FirstTieX-1] == 0) && (FirstTieX-1 >= 0) && (FirstTieY + 1 <= 5)) {
         if ((_Field[FirstTieY+2][FirstTieX-1]) || ((FirstTieY+2) == 5))  // Check if there is a tie or the end of the board under the empty field.
         return FirstTieX-1;
       } else {
@@ -369,7 +369,7 @@ int CheckNumInARow(int NumToBeChecked, int *pX, int *pY, int PlayerToBeChecked) 
       x++;    
       //
       // If cnt is equal to number of tiles to be checked, we check if there is empty
-      // field on the top.
+      // field on the top. asd
       //
       if (cnt == NumToBeChecked) {
         r = CheckIf4TiesCanBeSetCrossLineLeftRight(x,y, SpacePos, PlayerToBeChecked);

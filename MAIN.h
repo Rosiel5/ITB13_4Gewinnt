@@ -46,6 +46,9 @@
 
 #define NET_MODE_SERVER           1
 #define NET_MODE_CLIENT           2
+#define NET_UDP_PORT              49149
+#define NET_TCP_PORT              49150
+#define NET_DISCOVER_TIMEOUT_S    5
 #define NET_END_FLAG_VAL          (1u << 3)
 
 /*********************************************************************

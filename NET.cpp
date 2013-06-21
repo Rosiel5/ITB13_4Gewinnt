@@ -95,6 +95,82 @@ static int _Send(SOCKET Sock, char * acBuf, int NumBytes){
 
 /*********************************************************************
 *
+*       _NET_Discover()
+*
+* Function description:
+*   Function responsible for the initial communication using
+*   UDP broadcast.
+*
+*   Return values:
+*      0: Success
+*   != 0: Error
+*/
+static int _NET_Discover(sockaddr_in * RemoteAddr) {
+  SOCKET          Sock = 0;
+  char            Opt;
+  char            acBuf[9] = "Discover";
+  int             Len;
+  int             r;
+  sockaddr_in     LAddr;
+  sockaddr_in     BAddr;
+
+  //
+  // Create a socket with broadcast capabilities.
+  //
+  Sock = socket(AF_INET, SOCK_DGRAM, 0);
+  if (Sock == -1) {
+    DisplayErrorMessageBox(MB_OK, L"socket(): Could not create socket");
+    return -1;
+  }
+  Opt = 1;
+  setsockopt(Sock, SOL_SOCKET, SO_BROADCAST, &Opt, sizeof(Opt));
+  //
+  // Bind the socket
+  //
+  memset(&LAddr, 0, sizeof(LAddr));
+  LAddr.sin_family      = AF_INET;
+  LAddr.sin_port        = htons(NET_UDP_PORT);
+  LAddr.sin_addr.s_addr = INADDR_ANY;
+  r = bind(Sock, (SOCKADDR *)&LAddr, sizeof(LAddr));
+  if (r < 0) {
+    _DisplayError(1);
+    DisplayErrorMessageBox(MB_OK, L"bind(): Could not bind.");
+    return -1;
+  }
+  //
+  // Send the Discover.
+  //
+  BAddr.sin_family = AF_INET;
+  BAddr.sin_port = htons(NET_UDP_PORT);
+  BAddr.sin_addr.s_addr = inet_addr("255.255.255.255");
+  r = sendto(Sock, acBuf, sizeof(acBuf), 0, (SOCKADDR*)&BAddr, sizeof(BAddr));
+  if (r < 0) {
+    _DisplayError(1);
+    return r;
+  }
+  
+  BAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+  //
+  // There seems to be some strange loopback issue on our development machine (and others?)
+  // where we will receive the sent packet (sendto) in our recvfrom routine.
+  // To avoid this we check the message.
+  //
+  do {
+    memset(acBuf, 0, sizeof(acBuf));
+    Len = sizeof(BAddr);
+    r = recvfrom(Sock, &acBuf[0], sizeof(acBuf), 0, (SOCKADDR*)&BAddr, &Len);
+  } while(memcmp(acBuf, "Discover\0", sizeof(acBuf)) == 0);
+
+  if (r < 0 || memcmp(acBuf, "Serverxx\0", sizeof(acBuf))) {
+    return -1;
+  } else {
+    memcpy( RemoteAddr, &BAddr, Len);
+  }
+  return 0;
+}
+
+/*********************************************************************
+*
 *       ThreadNET()
 *
 * Function description:
@@ -103,16 +179,21 @@ static int _Send(SOCKET Sock, char * acBuf, int NumBytes){
 *
 */
 VOID ThreadNET(PVOID pvoid) {
-  WORD         wVersionRequested;
-  WSADATA      wsaData;
-  SOCKET       Sock = 0;
-  sockaddr_in  Addr;
-  sockaddr     RemoteAddr;
-  char *       acBuf;
-  int          BufLen;
-  int          AddrLen;
-  char         Mode;
-  int          r;
+  WORD            wVersionRequested;
+  WSADATA         wsaData;
+  SOCKET          Sock = 0;
+  SOCKET          DiscoverSock = 0;
+  struct timeval  tVal;
+  fd_set          readfds;
+  sockaddr_in     Addr;
+  sockaddr_in     RemoteAddr;
+  char *          acBuf;
+  int             BufLen;
+  int             AddrLen;
+  char            Mode;
+  char            acBufDiscover[9];
+  int             Len;
+  int             r;
 
   //
   // Initialize winsock. Required to use TCP/IP.
@@ -123,7 +204,7 @@ VOID ThreadNET(PVOID pvoid) {
     goto CleanAndExit;
   }
   //
-  // Create a sockt, we need one in any case.
+  // Create a socket, we need one in any case.
   //
   Sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (Sock == -1) {
@@ -138,8 +219,45 @@ VOID ThreadNET(PVOID pvoid) {
   //
   Mode = (char)pvoid;
   if (Mode == NET_MODE_SERVER) {
+    //
+    // Handle server tasks, starting with a UDP socket for the Discover.
+    //
+    DiscoverSock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (DiscoverSock == -1) {
+      DisplayErrorMessageBox(MB_OK, L"socket(): Could not create socket");
+      goto CleanAndExit;
+    }
+    RemoteAddr.sin_family = AF_INET;
+    RemoteAddr.sin_port = htons(NET_UDP_PORT);
+    RemoteAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    r = bind(DiscoverSock, (SOCKADDR *) &RemoteAddr, sizeof (RemoteAddr));
+    //
+    // Set the timeout for select()
+    //
+    tVal.tv_sec  = NET_DISCOVER_TIMEOUT_S;
+    tVal.tv_usec = 0;
+    FD_ZERO(&readfds);
+    FD_SET(DiscoverSock, &readfds);
+    //
+    // Wait for data until we hit the timeout
+    //
+    SetMessage("Waiting for clients.....");
+    r = select(0, &readfds, NULL, NULL, &tVal);
+    if (r > 0) {
+      Len = sizeof(RemoteAddr);
+      r = recvfrom(DiscoverSock, acBufDiscover, sizeof(acBufDiscover), 0, (SOCKADDR*)&RemoteAddr, &Len);
+    } else {
+      goto CleanAndExit;
+    }
+    if (memcmp(acBufDiscover, "Discover\0", sizeof(acBufDiscover)) == 0) {
+      memcpy(acBufDiscover, "Serverxx\0", sizeof(acBufDiscover));
+      r = sendto(DiscoverSock, acBufDiscover, sizeof(acBufDiscover), 0, (SOCKADDR*)&RemoteAddr, sizeof(RemoteAddr));
+    } else {
+      goto CleanAndExit;
+    }
+    ClearMessage();
     Addr.sin_family      = AF_INET;
-    Addr.sin_port        = htons(5555);
+    Addr.sin_port        = htons(NET_TCP_PORT);
     Addr.sin_addr.s_addr = INADDR_ANY;
     r = bind(Sock, (struct sockaddr *)&Addr, sizeof(Addr));
     if (r < 0) {
@@ -151,15 +269,9 @@ VOID ThreadNET(PVOID pvoid) {
       DisplayErrorMessageBox(MB_OK, L"listen(): Listen failed.");
       goto CleanAndExit;
     }
-    //
-    // Since accept is blocking and the possibility for the user 
-    // to cancel the server mode should still exist a global variable is
-    // used in order to signal the main thread to display the appropriate
-    // message box and to wait for user input.
-    //
-    NET_ServerWaiting = 1; // @TODO no idea how to do this cleanly, could just call it from the gui thread
+    NET_ServerWaiting = 1;
     AddrLen = sizeof(RemoteAddr);
-    Sock = accept(Sock, &RemoteAddr, &AddrLen);
+    Sock = accept(Sock, (struct sockaddr *)&RemoteAddr, &AddrLen);
     NET_ServerWaiting = 0;
     if (Sock == SOCKET_ERROR) {
       DisplayErrorMessageBox(MB_OK, L"accept(): Accept failed.");
@@ -194,9 +306,14 @@ VOID ThreadNET(PVOID pvoid) {
 
     
   } else if (Mode == NET_MODE_CLIENT) {
-    Addr.sin_family = AF_INET;
-    Addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    Addr.sin_port = htons(5555);
+    SetMessage("Discovering  a server on the network....");
+    r = _NET_Discover(&Addr);
+    if (r != 0) {
+      SetMessage("A server was not found.");
+      goto CleanAndExit;
+    }
+    ClearMessage();
+    Addr.sin_port = htons(NET_TCP_PORT);
     r = connect(Sock, (SOCKADDR *) &Addr, sizeof (Addr));
     if (r == SOCKET_ERROR) {
         DisplayErrorMessageBox(MB_OK, L"accept(): Accept failed.");

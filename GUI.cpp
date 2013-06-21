@@ -185,7 +185,7 @@ void SetMessage(const char* acIn) {
 *
 */
 void ClearMessage(void) {
-  _acMessage[0] = 0;
+  SetMessage("\0");
 }
 
 /*********************************************************************
