@@ -123,6 +123,7 @@ void DrawBoard(void);			              // Draws the game board
 */
 int CheckNumInARow(int NumToBeChecked, int *pX, int *pY, int PlayerToBeChecked);
 void CalculateNextMove(unsigned int );   // Calculates the next move
+int Check2Tiels3Spaces(int *pX, int PlayerToBeChecked);
 
 /*********************************************************************
 *

@@ -164,7 +164,9 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
           do {
             if (CheckNumInARow(3, &pX, &pY, _CurrentPlayer)){         // May 'I' win?
               r = SetTile(pX);
-            } else if (CheckNumInARow(3,  &pX,  &pY, 1)) {            // May I create a row of 4?
+            } else if (CheckNumInARow(3,  &pX,  &pY, 1)) {            // Can the enemy win?
+              r = SetTile(pX);
+            } else if (Check2Tiels3Spaces(&pX, 1)) {                  // Can the enemy create a pat situation by creating a 3 tile row with free fields to either side?
               r = SetTile(pX);
             } else if (CheckNumInARow(2,  &pX,  &pY, 2)) {            // May I create a row of 3?
               r = SetTile(pX);

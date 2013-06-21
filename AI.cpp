@@ -303,13 +303,12 @@ int CheckIf4TiesCanBeSetVertical(int xPos, int yPos, int RowWithSpace, int Curre
   }
 }
 
-
 /*********************************************************************
 *
-*       CheckIf4TiesCanBeSetCrossLineLeftRight()
+*       CheckNumInARow()
 *
 * Function description:
-*   This function go through the whole field array
+*   This function will go through the whole field array
 *   and looks if there are NumToBeChecked tiles in a "row".
 *   If so, it checks wheater there is a possibility for the opposite
 *   to set the fourth tile in order to win. If both conditions are true
@@ -320,13 +319,12 @@ int CheckIf4TiesCanBeSetVertical(int xPos, int yPos, int RowWithSpace, int Curre
 *     int NumToBeChecked: Number of tiles to be checked. (1-3)
 *     int Player: Specifies the player to be checked
 *
-*   return values:
+*   Return values:
 *      0: No possible field is available
 *      1: Possible field is available
 *                          and Bit[8:15] contains Y value
 *
 */
-
 int CheckNumInARow(int NumToBeChecked, int *pX, int *pY, int PlayerToBeChecked) {
   int cnt;
   int x;
@@ -523,6 +521,78 @@ int CheckNumInARow(int NumToBeChecked, int *pX, int *pY, int PlayerToBeChecked) 
       } else {                                // No possibility to set a tie
           cnt = 0;
           RecentTileSet = 0;  
+        }
+      }
+    }
+    cnt = 0;
+    RecentTileSet = 0;   
+  }
+  return 0;
+}
+
+
+/*********************************************************************
+*
+*       Check2Tiels3Spaces()
+*
+* Function description:
+*   Check if opposite has the chance to win.
+*   We have to check if opposite got 2 ties as in the two scenarios below:
+*   Scenario1: 0,2,2,0,0
+*   Scenario2: 0,0,2,2,0
+*
+*   Parameters:
+*     int NumToBeChecked: Number of tiles to be checked. (1-3)
+*     int Player: Specifies the player to be checked
+*
+*   Return values:
+*      0: No possible field is available
+*      1: Possible field is available
+*                          and Bit[8:15] contains Y value
+*
+*/
+int Check2Tiels3Spaces(int *pX, int PlayerToBeChecked) {
+  int cnt = 0;
+  int RecentTileSet = 0;
+  int x;
+  int y;
+  //
+  // Check horizontal
+  //
+  for (y = 0; (y < FIELD_Y); y++) {               // go through each column
+    for (x = 0; (x < FIELD_X); x++) {             // Go through each row
+      if ((_Field[y][x] == PlayerToBeChecked) && (RecentTileSet == 0)) {  // This is the first tie in this colum
+        cnt = 1;
+        RecentTileSet = 1;
+      } else if (_Field[y][x] == PlayerToBeChecked) {                     // This is the next tie in this colum
+        cnt++;
+      } else {                                                            // Reset values when we do not hit a tie of current player
+        cnt = 0;
+        RecentTileSet = 0;
+      }
+      //
+      // If we found 2 tiles we have to check wheater there are 3 empty fields left or right
+      //
+      if (cnt == 2) {
+        //
+        // First check scenario 1
+        //
+        if ((_Field[y][x-2] == 0) && (_Field[y][x-3] == 0) && (_Field[y][x+1] == 0)) {
+          if (y == 5) {           // we are in row 5 and we do not have to check weater the "empty fields" can be set
+            *pX = x-2;
+            return 1;
+          } else if ((_Field[y+1][x-2] != 0) || (_Field[y+1][x-3] != 0) || (_Field[y+1][x+1] != 0)) {
+            *pX = x-2;
+            return 1;
+          }
+        } else if ((_Field[y][x-2] == 0) && (_Field[y][x+1] == 0) && (_Field[y][x+2] == 0)) {  // Check scenario 2
+          if (y == 5) {           // we are in row 5 and we do not have to check weater the "empty fields" can be set
+            *pX = x+1;
+            return 1;
+          } else if ((_Field[y+1][x-2] != 0) || (_Field[y+1][x+1] != 0) || (_Field[y+1][x+2] != 0)){
+            *pX = x+1;
+            return 1;
+          }
         }
       }
     }
