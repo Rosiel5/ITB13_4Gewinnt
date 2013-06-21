@@ -76,7 +76,7 @@ int SetTile(int FieldX) {
 
   HDC     hdc;
   HBRUSH  hEmptyTile;
-  HBRUSH  hPlayer;
+  HBRUSH  hPlayer = 0;
   
   //
   // Check whether the column is full.

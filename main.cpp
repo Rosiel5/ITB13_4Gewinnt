@@ -69,7 +69,6 @@ void Start() {
 */
 LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
   int r;
-  int FieldX;
   int pX;
   int pY;
 

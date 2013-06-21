@@ -187,7 +187,7 @@ VOID ThreadNET(PVOID pvoid) {
   fd_set          readfds;
   sockaddr_in     Addr;
   sockaddr_in     RemoteAddr;
-  char *          acBuf;
+  char *          acBuf = 0;
   int             BufLen;
   int             AddrLen;
   char            Mode;
