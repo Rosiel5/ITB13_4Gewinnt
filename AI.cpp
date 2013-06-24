@@ -349,7 +349,7 @@ int CheckNumInARow(int NumToBeChecked, int *pX, int *pY, int PlayerToBeChecked) 
     x = NextX;
     y = NextY;   
 	do {
-      if ((_Field[y][x] == PlayerToBeChecked) && (RecentTileSet == 0)) {  // This is the first tie in this colum
+      if ((_Field[y][x] == PlayerToBeChecked) && (RecentTileSet == 0) && (x >= 0) && (y <= 5)) {  // This is the first tie in this colum
         cnt = 1;
         RecentTileSet = 1;
         AllowSpace = 1;
@@ -577,7 +577,7 @@ int Check2Tiels3Spaces(int *pX, int PlayerToBeChecked) {
         //
         // First check scenario 1
         //
-        if ((_Field[y][x-2] == 0) && (_Field[y][x-3] == 0) && (_Field[y][x+1] == 0)) {
+        if ((_Field[y][x-2] == 0) && (_Field[y][x-3] == 0) && (_Field[y][x+1] == 0) && (((x-2) >= 0) || ((x+1) <= 6))) {
           if (y == 5) {           // we are in row 5 and we do not have to check weater the "empty fields" can be set
             *pX = x-2;
             return 1;
@@ -585,11 +585,11 @@ int Check2Tiels3Spaces(int *pX, int PlayerToBeChecked) {
             *pX = x-2;
             return 1;
           }
-        } else if ((_Field[y][x-2] == 0) && (_Field[y][x+1] == 0) && (_Field[y][x+2] == 0)) {  // Check scenario 2
+        } else if ((_Field[y][x-1] == 0) && (_Field[y][x+1] == 0) && (_Field[y][x+2] == 0) && (((x-1) >= 0) || ((x+2) <= 6))) {  // Check scenario 2
           if (y == 5) {           // we are in row 5 and we do not have to check weater the "empty fields" can be set
             *pX = x+1;
             return 1;
-          } else if ((_Field[y+1][x-2] != 0) || (_Field[y+1][x+1] != 0) || (_Field[y+1][x+2] != 0)){
+          } else if ((_Field[y+1][x-1] != 0) || (_Field[y+1][x+1] != 0) || (_Field[y+1][x+2] != 0)){
             *pX = x+1;
             return 1;
           }
