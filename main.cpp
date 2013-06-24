@@ -160,23 +160,28 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
           // We have switched to the AI,
           // the AI will attempt to perform a valid move.
           //
+          if (CheckNumInARow(3, &pX, &pY, _CurrentPlayer)){         // May 'I' win?
+            r = SetTile(pX);
+          } else if (CheckNumInARow(3,  &pX,  &pY, 1)) {            // Can the enemy win?
+            r = SetTile(pX);
+          } else if (Check2Tiels3Spaces(&pX, 1)) {                  // Can the enemy create a pat situation by creating a 3 tile row with free fields to either side?
+            r = SetTile(pX);
+          } else if (CheckNumInARow(2,  &pX,  &pY, 2)) {            // May I create a row of 3?
+            r = SetTile(pX);
+          } else if(CheckNumInARow(1, &pX,  &pY, 2)) {              // May I create a row of 2?
+            r = SetTile(pX);
+          } else {                                                  // Set random tile
+            srand(_RoundCount);
+	          pX = rand() % FIELD_X;
+            r = SetTile(	rand() % FIELD_X);
+          }
           do {
-            if (CheckNumInARow(3, &pX, &pY, _CurrentPlayer)){         // May 'I' win?
-              r = SetTile(pX);
-            } else if (CheckNumInARow(3,  &pX,  &pY, 1)) {            // Can the enemy win?
-              r = SetTile(pX);
-            } else if (Check2Tiels3Spaces(&pX, 1)) {                  // Can the enemy create a pat situation by creating a 3 tile row with free fields to either side?
-              r = SetTile(pX);
-            } else if (CheckNumInARow(2,  &pX,  &pY, 2)) {            // May I create a row of 3?
-              r = SetTile(pX);
-            } else if(CheckNumInARow(1, &pX,  &pY, 2)) {              // May I create a row of 2?
-              r = SetTile(pX);
-            } else {                                                  // Set random tile
+            if (r == -1) {
               srand(_RoundCount);
 	            pX = rand() % FIELD_X;
-              r = SetTile(	rand() % FIELD_X);
-            }
-          } while (r == -1);
+              r = SetTile(	rand() % FIELD_X);      
+            }              
+          } while(r == -1);
           switch (IncreaseRoundCntCheckEnd(pX, r)) {
           case 1:		
             DisplayWin();
